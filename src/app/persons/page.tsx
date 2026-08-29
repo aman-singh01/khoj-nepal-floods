@@ -53,7 +53,9 @@ export default async function PersonsPage({
         <>
           <p className="text-sm text-muted">
             {hasQuery
-              ? `${results.length} record${results.length === 1 ? "" : "s"} match your search`
+              ? results.length === 1
+                ? "1 record matches your search"
+                : `${results.length} records match your search`
               : `Showing ${results.length} most recent record${results.length === 1 ? "" : "s"}`}
           </p>
 
