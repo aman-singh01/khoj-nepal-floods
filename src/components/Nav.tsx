@@ -20,27 +20,33 @@ export function Nav() {
             </span>
           </span>
         </Link>
-        <nav className="ml-auto flex items-center gap-1 text-sm sm:gap-2">
+        <nav className="ml-auto flex items-center gap-1 text-sm sm:gap-1.5">
           <Link
             href="/persons"
-            className="rounded-lg px-3 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text"
+            className="rounded-lg px-2.5 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text"
           >
             Search
           </Link>
-          <Link href="/report" className="btn-primary px-3.5 py-2 text-sm">
-            Report someone
+          <Link
+            href="/updates"
+            className="hidden rounded-lg px-2.5 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text sm:block"
+          >
+            Updates
           </Link>
           <Link
             href="/official"
-            className="hidden rounded-lg px-3 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text sm:block"
+            className="hidden rounded-lg px-2.5 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text md:block"
           >
             Official help
           </Link>
           <Link
             href="/about"
-            className="rounded-lg px-3 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text"
+            className="hidden rounded-lg px-2.5 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text sm:block"
           >
             About
+          </Link>
+          <Link href="/report" className="btn-primary ml-1 px-3.5 py-2 text-sm">
+            Report someone
           </Link>
         </nav>
       </div>

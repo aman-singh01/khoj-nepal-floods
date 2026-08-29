@@ -10,6 +10,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "feeds:pull": "tsx src/scripts/pull-feeds.ts",
+    "updates:pull": "tsx src/scripts/pull-updates.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

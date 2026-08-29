@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { isModerator } from "@/lib/moderation-auth";
 import { moderate, moderatorLogout } from "@/app/actions";
-import { moderationQueue, moderationVersion } from "@/lib/repo";
+import { moderationQueue, moderationVersion, moderationUpdates } from "@/lib/repo";
 import { ModLogin } from "@/components/ModLogin";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { Callout } from "@/components/Callout";
@@ -54,8 +54,12 @@ export default async function ModerationPage() {
     );
   }
 
-  const [{ pendingPersons, pendingNotes, openReports }, version] =
-    await Promise.all([moderationQueue(), moderationVersion()]);
+  const [{ pendingPersons, pendingNotes, openReports }, version, updates] =
+    await Promise.all([
+      moderationQueue(),
+      moderationVersion(),
+      moderationUpdates(),
+    ]);
 
   return (
     <div className="space-y-8">
@@ -181,6 +185,62 @@ export default async function ModerationPage() {
               </OpButton>
             </div>
             {r.detail && <p className="mt-1 text-sm text-muted">{r.detail}</p>}
+          </div>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold">Event updates ({updates.length})</h2>
+        <p className="text-sm text-muted">
+          Aggregated from feeds. Pin an authoritative item to the top of{" "}
+          <Link href="/updates" className="underline">
+            /updates
+          </Link>
+          , or hide anything inaccurate or off-topic.
+        </p>
+        {updates.map((u) => (
+          <div
+            key={u.id}
+            className="rounded-lg border border-border bg-surface p-3 text-sm"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span>
+                <span className="text-xs text-muted">
+                  {u.trust} · {u.source} · {relativeTime(u.publishedAt.toISOString())}
+                  {u.pinned && " · 📌"}
+                  {u.hidden && " · hidden"}
+                </span>
+                <br />
+                <a
+                  href={u.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline"
+                >
+                  {u.title}
+                </a>
+              </span>
+              <div className="flex shrink-0 gap-2">
+                {u.pinned ? (
+                  <OpButton op="update_unpin" id={u.id}>
+                    Unpin
+                  </OpButton>
+                ) : (
+                  <OpButton op="update_pin" id={u.id}>
+                    Pin
+                  </OpButton>
+                )}
+                {u.hidden ? (
+                  <OpButton op="update_show" id={u.id}>
+                    Unhide
+                  </OpButton>
+                ) : (
+                  <OpButton op="update_hide" id={u.id} danger>
+                    Hide
+                  </OpButton>
+                )}
+              </div>
+            </div>
           </div>
         ))}
       </section>

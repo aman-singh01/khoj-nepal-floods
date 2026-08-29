@@ -1,13 +1,15 @@
 import { and, desc, eq, gte, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { getDb } from "@/db";
 import {
   persons,
   notes,
   abuseReports,
   contactMessages,
+  situationUpdates,
   type Person,
   type Note,
+  type SituationUpdate,
 } from "@/db/schema";
 import { normalizeName } from "./text";
 import { scoreName, tokenize, MATCH_THRESHOLD } from "./fuzzy";
@@ -628,6 +630,12 @@ export async function moderationVersion(): Promise<string> {
     .select({ c: sql<number>`count(*)::int`, m: sql<string | null>`max(${abuseReports.createdAt})` })
     .from(abuseReports)
     .where(eq(abuseReports.resolved, false));
+  const [u] = await db
+    .select({
+      c: sql<number>`count(*)::int`,
+      m: sql<string | null>`max(${situationUpdates.publishedAt})`,
+    })
+    .from(situationUpdates);
   return [
     p?.c ?? 0,
     p?.m ?? "",
@@ -635,5 +643,130 @@ export async function moderationVersion(): Promise<string> {
     n?.m ?? "",
     r?.c ?? 0,
     r?.m ?? "",
+    u?.c ?? 0,
+    u?.m ?? "",
   ].join("|");
+}
+
+// --- Situation updates (aggregated event news) --------------------------
+
+export interface PublicUpdate {
+  id: string;
+  source: string;
+  trust: SituationUpdate["trust"];
+  title: string;
+  summary: string | null;
+  url: string;
+  publishedAt: string;
+  pinned: boolean;
+}
+
+function toPublicUpdate(u: SituationUpdate): PublicUpdate {
+  return {
+    id: u.id,
+    source: u.source,
+    trust: u.trust,
+    title: u.title,
+    summary: u.summary,
+    url: u.url,
+    publishedAt: u.publishedAt.toISOString(),
+    pinned: u.pinned,
+  };
+}
+
+export function hashUrl(url: string): string {
+  return createHash("sha256")
+    .update(url.trim().toLowerCase())
+    .digest("hex")
+    .slice(0, 40);
+}
+
+/** Insert a fetched update; ignore if we already have that URL. Returns true if new. */
+export async function upsertUpdate(u: {
+  feed: string;
+  source: string;
+  trust: SituationUpdate["trust"];
+  title: string;
+  summary?: string;
+  url: string;
+  publishedAt: Date;
+}): Promise<boolean> {
+  const db = await getDb();
+  const rows = await db
+    .insert(situationUpdates)
+    .values({
+      feed: u.feed,
+      source: u.source,
+      trust: u.trust,
+      title: u.title.slice(0, 500),
+      summary: u.summary?.slice(0, 1000) ?? null,
+      url: u.url,
+      urlHash: hashUrl(u.url),
+      publishedAt: u.publishedAt,
+    })
+    .onConflictDoNothing({ target: situationUpdates.urlHash })
+    .returning({ id: situationUpdates.id });
+  return rows.length > 0;
+}
+
+export interface RecentUpdatesOpts {
+  limit?: number;
+  trust?: SituationUpdate["trust"];
+  includeHidden?: boolean;
+}
+
+export async function recentUpdates(
+  opts: RecentUpdatesOpts = {},
+): Promise<PublicUpdate[]> {
+  const db = await getDb();
+  const filters: SQL[] = [];
+  if (!opts.includeHidden) filters.push(eq(situationUpdates.hidden, false));
+  if (opts.trust) filters.push(eq(situationUpdates.trust, opts.trust));
+
+  const rows = await db
+    .select()
+    .from(situationUpdates)
+    .where(filters.length ? and(...filters) : undefined)
+    .orderBy(desc(situationUpdates.pinned), desc(situationUpdates.publishedAt))
+    .limit(Math.min(opts.limit ?? 60, 200));
+  return rows.map(toPublicUpdate);
+}
+
+export async function updatesVersion(): Promise<string> {
+  const db = await getDb();
+  const [row] = await db
+    .select({
+      c: sql<number>`count(*)::int`,
+      m: sql<string | null>`max(${situationUpdates.publishedAt})`,
+      p: sql<number>`count(*) filter (where ${situationUpdates.pinned})::int`,
+    })
+    .from(situationUpdates)
+    .where(eq(situationUpdates.hidden, false));
+  return [row?.c ?? 0, row?.m ?? "", row?.p ?? 0].join("|");
+}
+
+/** Newest fetched_at across all updates — used to decide if a re-pull is due. */
+export async function lastUpdateFetch(): Promise<Date | null> {
+  const db = await getDb();
+  const [row] = await db
+    .select({ m: sql<string | null>`max(${situationUpdates.fetchedAt})` })
+    .from(situationUpdates);
+  return row?.m ? new Date(row.m) : null;
+}
+
+export async function setUpdateFlags(
+  id: string,
+  flags: { pinned?: boolean; hidden?: boolean },
+): Promise<void> {
+  const db = await getDb();
+  await db.update(situationUpdates).set(flags).where(eq(situationUpdates.id, id));
+}
+
+export async function moderationUpdates(): Promise<SituationUpdate[]> {
+  const db = await getDb();
+  return db
+    .select()
+    .from(situationUpdates)
+    .orderBy(desc(situationUpdates.publishedAt))
+    .limit(40);
 }

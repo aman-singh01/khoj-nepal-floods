@@ -250,7 +250,21 @@ export async function moderate(formData: FormData): Promise<void> {
     case "report_resolve":
       await repo.resolveReport(id);
       break;
+    case "update_pin":
+      await repo.setUpdateFlags(id, { pinned: true, hidden: false });
+      break;
+    case "update_unpin":
+      await repo.setUpdateFlags(id, { pinned: false });
+      break;
+    case "update_hide":
+      await repo.setUpdateFlags(id, { hidden: true, pinned: false });
+      break;
+    case "update_show":
+      await repo.setUpdateFlags(id, { hidden: false });
+      break;
   }
 
   revalidatePath("/moderation");
+  revalidatePath("/updates");
+  revalidatePath("/");
 }

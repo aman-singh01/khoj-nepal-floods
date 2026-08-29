@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SearchForm } from "@/components/SearchForm";
 import { PersonCard } from "@/components/PersonCard";
+import { UpdateList } from "@/components/UpdateList";
 import { Callout } from "@/components/Callout";
 import { SetupNotice } from "@/components/SetupNotice";
 import { LiveRefresh } from "@/components/LiveRefresh";
@@ -8,24 +9,40 @@ import { EVENT } from "@/config/official-sources";
 import {
   feedVersion,
   recentPersons,
+  recentUpdates,
   stats,
+  updatesVersion,
   type PublicPerson,
+  type PublicUpdate,
   type Stats,
 } from "@/lib/repo";
+import { refreshUpdatesIfStale } from "@/lib/updates";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  let data: { recent: PublicPerson[]; counts: Stats; version: string } | null =
-    null;
+  let data:
+    | {
+        recent: PublicPerson[];
+        counts: Stats;
+        version: string;
+        updates: PublicUpdate[];
+        updatesVersion: string;
+      }
+    | null = null;
   let error: unknown = null;
+
+  await refreshUpdatesIfStale();
+
   try {
-    const [recent, counts, version] = await Promise.all([
+    const [recent, counts, version, updates, uv] = await Promise.all([
       recentPersons(9),
       stats(),
       feedVersion(),
+      recentUpdates({ limit: 4 }),
+      updatesVersion(),
     ]);
-    data = { recent, counts, version };
+    data = { recent, counts, version, updates, updatesVersion: uv };
   } catch (e) {
     error = e;
   }
@@ -87,6 +104,28 @@ export default async function HomePage() {
         reunite a relative. Never send money. Report any record that asks for
         payment using the “Report this record” link on its page.
       </Callout>
+
+      {data && data.updates.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-baseline justify-between border-b border-border pb-2">
+            <div className="flex items-baseline gap-3">
+              <h2 className="font-display text-lg font-semibold">Latest updates</h2>
+              <LiveRefresh
+                key="/api/live/updates"
+                src="/api/live/updates"
+                initialVersion={data.updatesVersion}
+              />
+            </div>
+            <Link
+              href="/updates"
+              className="text-sm font-medium text-accent-strong underline underline-offset-2"
+            >
+              All updates
+            </Link>
+          </div>
+          <UpdateList updates={data.updates} grouped={false} />
+        </section>
+      )}
 
       {data && data.recent.length > 0 && (
         <section className="space-y-4">

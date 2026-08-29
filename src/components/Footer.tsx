@@ -47,6 +47,16 @@ export function Footer() {
           <h2 className="mb-2 font-display text-sm font-semibold">On this site</h2>
           <ul className="flex flex-col gap-1.5 text-muted">
             <li>
+              <Link href="/updates" className="underline underline-offset-2 hover:text-text">
+                Live updates
+              </Link>
+            </li>
+            <li>
+              <Link href="/official" className="underline underline-offset-2 hover:text-text">
+                Official help
+              </Link>
+            </li>
+            <li>
               <Link href="/about" className="underline underline-offset-2 hover:text-text">
                 About &amp; safety
               </Link>

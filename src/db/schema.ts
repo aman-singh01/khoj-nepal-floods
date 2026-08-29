@@ -201,9 +201,47 @@ export const contactMessages = pgTable(
   (t) => [index("contact_person_idx").on(t.personId)],
 );
 
+/**
+ * Aggregated situation updates about the emergency — pulled from external news
+ * and humanitarian feeds. Every row links back to its origin; Khoj does not
+ * author or verify these.
+ */
+export const updateTrustEnum = pgEnum("update_trust", [
+  "official",
+  "humanitarian",
+  "news",
+]);
+
+export const situationUpdates = pgTable(
+  "situation_updates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    feed: text("feed").notNull(), // config id it came from, or "manual"
+    source: text("source").notNull(), // publisher name
+    trust: updateTrustEnum("trust").notNull().default("news"),
+    title: text("title").notNull(),
+    summary: text("summary"),
+    url: text("url").notNull(),
+    urlHash: text("url_hash").notNull().unique(),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    pinned: boolean("pinned").notNull().default(false),
+    hidden: boolean("hidden").notNull().default(false),
+  },
+  (t) => [
+    index("updates_published_idx").on(t.publishedAt),
+    index("updates_trust_idx").on(t.trust),
+    index("updates_hidden_idx").on(t.hidden),
+  ],
+);
+
 export type Person = typeof persons.$inferSelect;
 export type NewPerson = typeof persons.$inferInsert;
 export type Note = typeof notes.$inferSelect;
 export type NewNote = typeof notes.$inferInsert;
 export type AbuseReport = typeof abuseReports.$inferSelect;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+export type SituationUpdate = typeof situationUpdates.$inferSelect;
+export type NewSituationUpdate = typeof situationUpdates.$inferInsert;

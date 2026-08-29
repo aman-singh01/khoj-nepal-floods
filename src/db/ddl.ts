@@ -105,6 +105,25 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   created_at     timestamptz NOT NULL DEFAULT now()
 );
 
+DO $$ BEGIN
+  CREATE TYPE update_trust AS ENUM ('official', 'humanitarian', 'news');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE TABLE IF NOT EXISTS situation_updates (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  feed         text NOT NULL,
+  source       text NOT NULL,
+  trust        update_trust NOT NULL DEFAULT 'news',
+  title        text NOT NULL,
+  summary      text,
+  url          text NOT NULL,
+  url_hash     text NOT NULL UNIQUE,
+  published_at timestamptz NOT NULL,
+  fetched_at   timestamptz NOT NULL DEFAULT now(),
+  pinned       boolean NOT NULL DEFAULT false,
+  hidden       boolean NOT NULL DEFAULT false
+);
+
 CREATE INDEX IF NOT EXISTS persons_name_idx ON persons (name_normalized);
 CREATE INDEX IF NOT EXISTS persons_status_idx ON persons (status);
 CREATE INDEX IF NOT EXISTS persons_moderation_idx ON persons (moderation_state);
@@ -116,4 +135,7 @@ CREATE INDEX IF NOT EXISTS notes_ip_idx ON notes (submitter_ip_hash);
 CREATE INDEX IF NOT EXISTS abuse_person_idx ON abuse_reports (person_id);
 CREATE INDEX IF NOT EXISTS abuse_resolved_idx ON abuse_reports (resolved);
 CREATE INDEX IF NOT EXISTS contact_person_idx ON contact_messages (person_id);
+CREATE INDEX IF NOT EXISTS updates_published_idx ON situation_updates (published_at);
+CREATE INDEX IF NOT EXISTS updates_trust_idx ON situation_updates (trust);
+CREATE INDEX IF NOT EXISTS updates_hidden_idx ON situation_updates (hidden);
 `;

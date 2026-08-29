@@ -100,7 +100,38 @@ curl -X POST 'https://YOUR_HOST/api/pfif/import' \
 
 ---
 
-## 4. Before any of this goes live
+## 4. Live event-updates stream (`/updates`)
+
+The `/updates` page and the home "Latest updates" card aggregate news and
+humanitarian coverage of the emergency. Configured in
+[`src/config/update-feeds.ts`](../src/config/update-feeds.ts).
+
+**Ships enabled (no key needed):**
+- **Google News RSS** — a search query scoped to the event.
+- **UN News RSS** (Asia-Pacific), filtered to items that mention the event.
+
+**Add-ons:**
+- **ReliefWeb** — the best source for official situation reports, but its API
+  needs a pre-approved `appname` since 1 Nov 2025. Register at
+  <https://reliefweb.int/help/api>, then set `reliefwebAppname` and
+  `enabled: true` on the `reliefweb-nepal` feed.
+- **Any RSS/Atom feed** — add `{ kind: "rss", url, trust, filter? }`.
+
+**How it refreshes:**
+- **On page view** — a visit to `/updates` or `/` triggers a pull if the last
+  one was over `UPDATES_TTL_MINUTES` (12) ago. De-duped across concurrent
+  viewers. No cron required.
+- **Scheduled (livelier)** — `npm run updates:pull`, or
+  `POST /api/updates/refresh` with `authorization: <CRON_SECRET>` (Vercel Cron:
+  `{ "crons": [{ "path": "/api/updates/refresh", "schedule": "*/10 * * * *" }] }`).
+
+**Trust & moderation:** every item carries `official` / `humanitarian` / `news`
+and links to its origin. Khoj does not fact-check them. On `/moderation`,
+**pin** an authoritative item to the top or **hide** anything inaccurate or
+off-topic. Items are deduped by URL and expire from the pull window after 30
+days.
+
+## 5. Before any of this goes live
 
 - [ ] **Authorization.** A data-sharing agreement / MOU with each agency whose
       data you ingest or to whom you push. Volunteer status does not grant
