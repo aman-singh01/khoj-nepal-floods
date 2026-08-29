@@ -22,7 +22,7 @@ export function ReportForm({
   const err = state.errors ?? {};
 
   return (
-    <form action={action} encType="multipart/form-data" className="space-y-5">
+    <form action={action} className="space-y-5">
       {state.message && !state.ok && (
         <Callout tone="danger">{state.message}</Callout>
       )}
