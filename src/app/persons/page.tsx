@@ -44,7 +44,7 @@ export default async function PersonsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Search records</h1>
+      <h1 className="font-display text-2xl font-semibold">Search records</h1>
       <SearchForm defaults={{ q, status, nationality }} />
 
       {error ? <SetupNotice error={error} /> : null}
@@ -60,11 +60,20 @@ export default async function PersonsPage({
           </p>
 
           {results.length === 0 && (
-            <div className="rounded-lg border border-border bg-surface p-6 text-center">
-              <p className="mb-3">No matching records found.</p>
+            <div className="card flex flex-col items-center gap-3 p-8 text-center">
+              <span
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-surface-2 text-muted"
+                aria-hidden
+              >
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                  <path d="m17 17 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </span>
+              <p className="text-muted">No matching records found.</p>
               <Link
                 href={`/report?type=seeking${q ? `&name=${encodeURIComponent(q)}` : ""}`}
-                className="inline-block rounded-md bg-accent px-4 py-2 font-medium text-accent-fg"
+                className="btn-primary"
               >
                 Add a record for this person
               </Link>

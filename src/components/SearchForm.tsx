@@ -1,5 +1,24 @@
 import { STATUS_LABELS } from "@/lib/validation";
 
+function SearchIcon() {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      aria-hidden
+      className="h-5 w-5 text-muted"
+    >
+      <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="m14 14 4 4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /**
  * Plain GET form - no JavaScript required, shareable/bookmarkable result URLs,
  * and it works on the slowest connection.
@@ -17,36 +36,41 @@ export function SearchForm({
       method="get"
       className={
         compact
-          ? "flex flex-wrap gap-2"
-          : "grid gap-3 rounded-xl border border-border bg-surface p-4 sm:grid-cols-[1fr_auto]"
+          ? "flex flex-wrap items-end gap-2"
+          : "card grid gap-3 p-4 sm:p-5"
       }
     >
-      <div className={compact ? "flex-1 min-w-[12rem]" : ""}>
+      <div className={compact ? "min-w-[12rem] flex-1" : "sm:col-span-2"}>
         <label htmlFor="q" className="sr-only">
           Name
         </label>
-        <input
-          id="q"
-          name="q"
-          type="search"
-          defaultValue={defaults?.q ?? ""}
-          placeholder="Name (any spelling)"
-          className="w-full rounded-md border border-border bg-bg px-3 py-2"
-          autoComplete="off"
-        />
+        <div className="relative">
+          <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+            <SearchIcon />
+          </span>
+          <input
+            id="q"
+            name="q"
+            type="search"
+            defaultValue={defaults?.q ?? ""}
+            placeholder="Search by name — any spelling"
+            className="field py-3 pl-11 text-base"
+            autoComplete="off"
+          />
+        </div>
       </div>
 
       {!compact && (
         <div className="flex flex-wrap gap-3 sm:col-span-2">
-          <div>
-            <label htmlFor="status" className="mb-1 block text-sm text-muted">
+          <div className="min-w-[9rem] flex-1">
+            <label htmlFor="status" className="mb-1 block text-xs font-medium text-muted">
               Status
             </label>
             <select
               id="status"
               name="status"
               defaultValue={defaults?.status ?? ""}
-              className="rounded-md border border-border bg-bg px-3 py-2"
+              className="field"
             >
               <option value="">Any</option>
               {Object.entries(STATUS_LABELS).map(([value, label]) => (
@@ -56,8 +80,11 @@ export function SearchForm({
               ))}
             </select>
           </div>
-          <div>
-            <label htmlFor="nationality" className="mb-1 block text-sm text-muted">
+          <div className="min-w-[9rem] flex-1">
+            <label
+              htmlFor="nationality"
+              className="mb-1 block text-xs font-medium text-muted"
+            >
               Nationality
             </label>
             <input
@@ -65,17 +92,14 @@ export function SearchForm({
               name="nationality"
               defaultValue={defaults?.nationality ?? ""}
               placeholder="e.g. India, Nepal"
-              className="rounded-md border border-border bg-bg px-3 py-2"
+              className="field"
             />
           </div>
         </div>
       )}
 
-      <button
-        type="submit"
-        className="rounded-md bg-accent px-4 py-2 font-medium text-accent-fg hover:opacity-90"
-      >
-        Search
+      <button type="submit" className={`btn-primary ${compact ? "" : "sm:col-span-2"}`}>
+        Search records
       </button>
     </form>
   );

@@ -18,7 +18,13 @@ export default async function ReportPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Add a record</h1>
+      <div>
+        <h1 className="font-display text-2xl font-semibold">Add a record</h1>
+        <p className="mt-1 text-muted">
+          It takes a minute. The more detail you add, the easier this person is to
+          recognise.
+        </p>
+      </div>
 
       <Callout tone="info">
         Only share information you have a genuine reason to share. This board is

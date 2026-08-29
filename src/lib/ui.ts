@@ -42,6 +42,17 @@ export function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString();
 }
 
+/**
+ * Deterministic hue (0-359) for an initial-avatar, derived from the name.
+ * Pair with the `.avatar` class, which turns it into theme-aware colours:
+ *   <span className="avatar" style={{ "--av-h": avatarHue(name) }} />
+ */
+export function avatarHue(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return Math.abs(hash) % 360;
+}
+
 export function personSummaryLine(p: PublicPerson): string {
   return [
     formatAge(p),

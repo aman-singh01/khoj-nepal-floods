@@ -4,24 +4,27 @@ export const metadata: Metadata = { title: "About & safety" };
 
 export default function AboutPage() {
   return (
-    <div className="prose-sm mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl space-y-10">
       <section className="space-y-3">
-        <h1 className="text-2xl font-bold">About Khoj</h1>
-        <p>
+        <h1 className="font-display text-2xl font-semibold">About Khoj</h1>
+        <p className="leading-relaxed text-muted">
           Khoj (&ldquo;search&rdquo;) is a volunteer-run message board for
           reconnecting people separated by the Nepal floods. Anyone can post a
           record for a missing person, add a sighting, or search what others have
           shared. It follows the data model of Google&rsquo;s Person Finder and
           exports the{" "}
-          <a className="underline" href="https://zesty.ca/pfif/1.4/">
+          <a
+            className="text-accent-strong underline underline-offset-2"
+            href="https://zesty.ca/pfif/1.4/"
+          >
             PFIF
           </a>{" "}
           standard so records can be shared with official tracing services.
         </p>
-        <p className="font-medium">
+        <p className="rounded-xl border border-border bg-surface p-4 text-sm font-medium shadow-sm">
           This is not an official service. For formal tracing, work with the{" "}
           <a
-            className="underline"
+            className="text-accent-strong underline underline-offset-2"
             href="https://familylinks.icrc.org/"
             target="_blank"
             rel="noopener noreferrer"
@@ -33,15 +36,16 @@ export default function AboutPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Staying safe</h2>
-        <ul className="list-disc space-y-1 pl-5">
+        <h2 className="font-display text-xl font-semibold">Staying safe</h2>
+        <ul className="list-disc space-y-2 pl-5 text-muted marker:text-accent">
           <li>
-            <strong>Never pay anyone</strong> who claims to be holding a relative.
-            No genuine responder charges a fee.
+            <strong className="text-text">Never pay anyone</strong> who claims to
+            be holding a relative. No genuine responder charges a fee.
           </li>
           <li>
-            Contact details you enter are <strong>never shown publicly</strong>.
-            Messages between people are relayed by moderators.
+            Contact details you enter are{" "}
+            <strong className="text-text">never shown publicly</strong>. Messages
+            between people are relayed by moderators.
           </li>
           <li>
             Don&rsquo;t post home addresses, passport or ID numbers, or bank
@@ -58,16 +62,16 @@ export default function AboutPage() {
         </ul>
       </section>
 
-      <section id="privacy" className="space-y-3">
-        <h2 className="text-xl font-semibold">Privacy</h2>
-        <ul className="list-disc space-y-1 pl-5">
+      <section id="privacy" className="space-y-3 scroll-mt-20">
+        <h2 className="font-display text-xl font-semibold">Privacy</h2>
+        <ul className="list-disc space-y-2 pl-5 text-muted marker:text-accent">
           <li>
             Public fields: name, approximate age, sex, nationality, locations,
             description, photo, and status. These are visible to everyone and
             indexed by search engines.
           </li>
           <li>
-            Private fields: the submitter&rsquo;s name detail, email, and phone.
+            Private fields: the submitter&rsquo;s contact name, email, and phone.
             These are visible only to moderators.
           </li>
           <li>

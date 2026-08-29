@@ -43,7 +43,7 @@ export default async function ModerationPage() {
   if (!(await isModerator())) {
     return (
       <div className="max-w-lg space-y-4">
-        <h1 className="text-2xl font-bold">Moderator sign-in</h1>
+        <h1 className="font-display text-2xl font-semibold">Moderator sign-in</h1>
         <Callout tone="info">
           This area is for volunteers reviewing held records and abuse reports.
           The token is configured by the site operator.
@@ -58,9 +58,11 @@ export default async function ModerationPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Moderation queue</h1>
+        <h1 className="font-display text-2xl font-semibold">Moderation queue</h1>
         <form action={moderatorLogout}>
-          <button className="text-sm underline">Sign out</button>
+          <button className="text-sm text-muted underline underline-offset-2 hover:text-text">
+            Sign out
+          </button>
         </form>
       </div>
 

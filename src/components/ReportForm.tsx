@@ -27,43 +27,45 @@ export function ReportForm({
         <Callout tone="danger">{state.message}</Callout>
       )}
 
-      <fieldset className="rounded-lg border border-border p-4">
-        <legend className="px-1 text-sm font-medium">This record is…</legend>
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-          <label className="flex items-start gap-2">
-            <input
-              type="radio"
-              name="recordType"
-              value="seeking"
-              checked={type === "seeking"}
-              onChange={() => setType("seeking")}
-              className="mt-1"
-            />
-            <span>
-              <strong>I am looking for this person</strong>
-              <br />
-              <span className="text-sm text-muted">
-                They are missing and I want to be contacted with information.
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium">This record is…</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              [
+                "seeking",
+                "I am looking for this person",
+                "They are missing and I want to be contacted with information.",
+              ],
+              [
+                "info",
+                "I have information about this person",
+                "I have seen them, or I know they are safe / injured / deceased.",
+              ],
+            ] as const
+          ).map(([value, heading, sub]) => (
+            <label
+              key={value}
+              className={`flex cursor-pointer gap-3 rounded-xl border p-4 transition ${
+                type === value
+                  ? "border-accent bg-accent-weak shadow-sm"
+                  : "border-border bg-surface hover:border-border-strong"
+              }`}
+            >
+              <input
+                type="radio"
+                name="recordType"
+                value={value}
+                checked={type === value}
+                onChange={() => setType(value)}
+                className="mt-1 accent-[color:var(--accent)]"
+              />
+              <span>
+                <strong className="block text-sm">{heading}</strong>
+                <span className="mt-0.5 block text-sm text-muted">{sub}</span>
               </span>
-            </span>
-          </label>
-          <label className="flex items-start gap-2">
-            <input
-              type="radio"
-              name="recordType"
-              value="info"
-              checked={type === "info"}
-              onChange={() => setType("info")}
-              className="mt-1"
-            />
-            <span>
-              <strong>I have information about this person</strong>
-              <br />
-              <span className="text-sm text-muted">
-                I have seen them, or I know they are safe / injured / deceased.
-              </span>
-            </span>
-          </label>
+            </label>
+          ))}
         </div>
       </fieldset>
 
@@ -190,12 +192,12 @@ export function ReportForm({
           name="photo"
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          className="block w-full text-sm"
+          className="block w-full text-sm text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-accent-weak file:px-3 file:py-2 file:text-sm file:font-medium file:text-accent-strong"
         />
       </Field>
 
-      <fieldset className="grid gap-4 rounded-lg border border-border p-4 sm:grid-cols-2">
-        <legend className="px-1 text-sm font-medium">
+      <fieldset className="grid gap-4 rounded-2xl border border-border bg-surface-2/60 p-5 shadow-sm sm:grid-cols-2">
+        <legend className="rounded-md bg-surface px-2 py-0.5 text-sm font-medium">
           Your details (kept private)
         </legend>
         <p className="text-sm text-muted sm:col-span-2">

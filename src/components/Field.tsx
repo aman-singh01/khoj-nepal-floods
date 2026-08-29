@@ -52,10 +52,10 @@ export function Field({
   return (
     <div>
       {label && (
-        <label htmlFor={name} className="mb-1 block text-sm font-medium">
+        <label htmlFor={name} className="mb-1.5 block text-sm font-medium">
           {label}
           {required && (
-            <span className="text-rose-600" aria-hidden>
+            <span className="text-rose-600 dark:text-rose-400" aria-hidden>
               {" "}
               *
             </span>
@@ -63,13 +63,13 @@ export function Field({
         </label>
       )}
       {hint && (
-        <p id={hintId} className="mb-1 text-xs text-muted">
+        <p id={hintId} className="mb-1.5 text-xs leading-relaxed text-muted">
           {hint}
         </p>
       )}
       {control}
       {error && (
-        <p id={errorId} className="mt-1 text-sm text-rose-600 dark:text-rose-400">
+        <p id={errorId} className="mt-1.5 text-sm text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}
@@ -77,5 +77,5 @@ export function Field({
   );
 }
 
-export const inputClass =
-  "w-full rounded-md border border-border bg-bg px-3 py-2 focus:border-accent";
+/** Shared input styling. `.field` is defined in globals.css. */
+export const inputClass = "field";
