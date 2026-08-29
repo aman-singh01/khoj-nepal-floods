@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { UpdateList } from "@/components/UpdateList";
 import { LiveRefresh } from "@/components/LiveRefresh";
-import { Callout } from "@/components/Callout";
 import { SetupNotice } from "@/components/SetupNotice";
 import { recentUpdates, updatesVersion, type PublicUpdate } from "@/lib/repo";
 import { refreshUpdatesIfStale } from "@/lib/updates";
@@ -61,15 +60,6 @@ export default async function UpdatesPage({
         Live coverage of the {EVENT.name} ({EVENT.date}), gathered from news and
         humanitarian sources. Every item links to its origin.
       </p>
-
-      <Callout tone="info">
-        Khoj does not write or fact-check these updates. Treat news items as
-        developing reports, and rely on the{" "}
-        <Link href="/official" className="underline underline-offset-2">
-          official channels
-        </Link>{" "}
-        for confirmed information.
-      </Callout>
 
       <div className="flex flex-wrap gap-2">
         {TABS.map((t) => {
