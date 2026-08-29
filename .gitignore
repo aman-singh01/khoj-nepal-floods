@@ -1,0 +1,26 @@
+# dependencies
+/node_modules
+
+# next
+/.next
+/out
+next-env.d.ts
+
+# local database (PGlite)
+/.pglite
+/data
+
+# local uploads (dev only; production uses blob storage)
+/public/uploads
+
+# env
+.env
+.env.local
+.env*.local
+
+# misc
+.DS_Store
+*.log
+/coverage
+.idea/
+.vscode/
