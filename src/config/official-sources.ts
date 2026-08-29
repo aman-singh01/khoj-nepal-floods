@@ -121,11 +121,14 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     authority: "National Disaster Risk Reduction & Management Authority",
     country: "np",
     kind: "portal",
-    purpose: "Lead authority coordinating search, rescue and relief operations.",
-    url: "https://ndrrma.gov.np/",
-    phone: null,
-    verified: false,
-    notes: "Confirm the live incident / press-release page for this event.",
+    purpose:
+      "Lead authority coordinating search, rescue and relief operations. Live incident data is on the BIPAD portal and @NDRRMA_Nepal on X.",
+    url: "https://ndrrma.gov.np/en",
+    phone: "+977 1 5358240 (general office, Baber Mahal, Kathmandu)",
+    verified: true,
+    verifiedOn: "2026-08-29",
+    verifiedBy:
+      "domain corroborated across PreventionWeb / UN-SPIDER / Devex; office number from secondary reporting",
   },
   {
     id: "np-ntb",
@@ -136,10 +139,11 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     purpose:
       "Reported to be maintaining a registry of foreign nationals (trekkers, Kailash pilgrims) missing in the flood.",
     url: "https://ntb.gov.np/",
-    phone: "+977 1 4256909",
+    phone: "+977 1 4256909 (NTB Kathmandu office — not confirmed as a tracing desk)",
     verified: false,
     verifiedOn: "2026-08-29",
-    verifiedBy: "single secondary report — confirm before relying on it",
+    verifiedBy:
+      "NTB is compiling a list of out-of-contact foreign visitors (517 foreign nationals reported), but has not published a dedicated public helpline",
   },
   {
     id: "np-nrcs",
@@ -148,11 +152,13 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     country: "np",
     kind: "portal",
     purpose:
-      "Tracing and reconnecting separated family members, within the ICRC network.",
-    url: "https://nrcs.org/",
+      "Tracing and reconnecting separated family members, in the ICRC network. NRCS has activated its Emergency Operations Centre for this flood.",
+    url: "https://familylinks.icrc.org/organization/nepal-red-cross-society",
     phone: null,
-    verified: false,
-    notes: "Confirm the current RFL contact and whether a flood-specific desk is open.",
+    verified: true,
+    verifiedOn: "2026-08-29",
+    verifiedBy:
+      "nrcs.org confirmed; NRCS EOC activation reported (redcross.org, Aug 2026); ICRC RFL org page for NRCS exists",
   },
 
   // ── India (288 nationals reported missing — largest foreign group) ───────
@@ -198,7 +204,7 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     phone: null,
     verified: false,
     notes:
-      "Standing portal. Several Indian state governments (e.g. Haryana / Gurugram) also opened district desks — check state announcements.",
+      "madad.gov.in did not respond when checked (2026-08-29) — confirm MEA's current consular grievance portal. Use the MEA control room above meanwhile. Several Indian states (e.g. Haryana / Gurugram) also opened district desks.",
   },
   {
     id: "in-ndma",
@@ -209,7 +215,9 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     purpose: "Indian disaster-response coordination; deployed NDRF assistance to Nepal.",
     url: "https://www.ndma.gov.in/",
     phone: null,
-    verified: false,
+    verified: true,
+    verifiedOn: "2026-08-29",
+    verifiedBy: "ndma.gov.in reachable; NDRF assistance to Nepal reported",
   },
 
   // ── United States (≈90 nationals reported missing) ──────────────────────
@@ -223,11 +231,11 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
       "For U.S. citizens in Nepal and their families. State Dept is working with Nepali authorities and has deployed a disaster response advisor.",
     url: "https://np.usembassy.gov/",
     phone:
-      "Overseas Citizens Services: +1 888 407 4747 (from U.S./Canada) / +1 202 501 4444 (from overseas)",
-    verified: false,
+      "State Dept Overseas Citizens Services: +1 888 407 4747 (US/Canada) / +1 202 501 4444 (overseas). Family tracing — American Red Cross: +1 844 782 9441",
+    verified: true,
     verifiedOn: "2026-08-29",
     verifiedBy:
-      "State Dept response confirmed in reporting; embassy site was down. Confirm a flood-specific task-force number / email.",
+      "np.usembassy.gov reachable; State Dept engaged (adviser deployed, working with local authorities per reporting); ACS line is the standing channel — no flood-specific task-force number published. ARC RFL helpline confirmed on redcross.org.",
   },
 
   // ── International / any nationality ─────────────────────────────────────
@@ -253,10 +261,13 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     country: "intl",
     kind: "portal",
     purpose:
-      "The global family-reunification network, working with the Nepal Red Cross and other national societies.",
+      "The global family-reunification network, working through the Nepal Red Cross and other national societies. Start a search through your own national Red Cross.",
     url: "https://familylinks.icrc.org/",
-    phone: null,
-    verified: false,
+    phone: "Families abroad — American Red Cross RFL helpline: +1 844 782 9441",
+    verified: true,
+    verifiedOn: "2026-08-29",
+    verifiedBy:
+      "familylinks.icrc.org is the RFL network (org pages for Nepal Red Cross and American Red Cross exist); ARC helpline confirmed on redcross.org",
   },
   {
     id: "intl-icrc-tracetheface",
@@ -268,6 +279,8 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     url: "https://tracetheface.icrc.org/",
     phone: null,
     verified: false,
+    notes:
+      "Long-running ICRC tool; the site did not respond when checked (2026-08-29). If unavailable, use familylinks.icrc.org or your national Red Cross society.",
   },
 
   // ── Machine-readable feeds ─────────────────────────────────────────────
