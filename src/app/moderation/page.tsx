@@ -99,6 +99,12 @@ export default async function ModerationPage() {
                 <span className="ml-2 text-xs text-muted">
                   {p.recordType} · reports: {p.reportCount} ·{" "}
                   {relativeTime(p.createdAt.toISOString())}
+                  {p.feedMissingSince && (
+                    <span className="ml-1 text-amber-700 dark:text-amber-400">
+                      · no longer in {p.source.replace(/^import:/, "")} feed since{" "}
+                      {relativeTime(p.feedMissingSince.toISOString())}
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex gap-2">

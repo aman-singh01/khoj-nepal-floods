@@ -29,7 +29,8 @@ async function tick() {
     try {
       const r = await ingestFeed(feed);
       console.log(
-        `${at}  ${feed.id}: +${r.imported} new, ${r.updated} updated, ${r.skipped} skipped` +
+        `${at}  ${feed.id}: +${r.imported} new, ${r.updated} updated, ` +
+          `${r.reconcileGrace} flagged-missing, ${r.reconcileHeld} held` +
           (r.errors.length ? ` (${r.errors.length} errors)` : ""),
       );
     } catch (e) {

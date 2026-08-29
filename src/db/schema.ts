@@ -93,6 +93,8 @@ export const persons = pgTable(
     source: text("source").notNull().default("web"),
     pfifRecordId: text("pfif_record_id").unique(),
     linkedPersonId: uuid("linked_person_id"),
+    // For imported records: set when the row stops appearing in its source feed.
+    feedMissingSince: timestamp("feed_missing_since", { withTimezone: true }),
 
     // Safety
     moderationState: moderationStateEnum("moderation_state")

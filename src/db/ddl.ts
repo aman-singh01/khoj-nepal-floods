@@ -124,7 +124,10 @@ CREATE TABLE IF NOT EXISTS situation_updates (
   hidden       boolean NOT NULL DEFAULT false
 );
 
+ALTER TABLE persons ADD COLUMN IF NOT EXISTS feed_missing_since timestamptz;
+
 CREATE INDEX IF NOT EXISTS persons_name_idx ON persons (name_normalized);
+CREATE INDEX IF NOT EXISTS persons_source_idx ON persons (source);
 CREATE INDEX IF NOT EXISTS persons_status_idx ON persons (status);
 CREATE INDEX IF NOT EXISTS persons_moderation_idx ON persons (moderation_state);
 CREATE INDEX IF NOT EXISTS persons_created_idx ON persons (created_at);

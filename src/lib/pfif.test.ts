@@ -29,6 +29,7 @@ function person(overrides: Partial<Person> = {}): Person {
     source: "web",
     pfifRecordId: null,
     linkedPersonId: null,
+    feedMissingSince: null,
     moderationState: "published",
     reportCount: 0,
     submitterIpHash: null,

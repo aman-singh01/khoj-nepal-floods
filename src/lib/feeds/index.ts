@@ -1,6 +1,6 @@
 import { parsePfif } from "./pfif";
 import { csvToRecords } from "./csv";
-import { upsertImported } from "@/lib/repo";
+import { upsertImported, reconcileImported } from "@/lib/repo";
 import type { OfficialSource } from "@/config/official-sources";
 import type { IngestResult, NormalizedRecord } from "./types";
 
@@ -87,6 +87,8 @@ export async function ingestPayload(
     imported: 0,
     updated: 0,
     skipped: 0,
+    reconcileGrace: 0,
+    reconcileHeld: 0,
     errors: [],
   };
   let records: NormalizedRecord[];
@@ -97,7 +99,9 @@ export async function ingestPayload(
     return result;
   }
 
+  const seen = new Set<string>();
   for (const rec of records) {
+    seen.add(rec.externalId);
     try {
       const outcome = await upsertImported(rec, sourceId);
       if (outcome === "imported") result.imported++;
@@ -107,31 +111,41 @@ export async function ingestPayload(
       result.errors.push(`${rec.fullName}: ${(e as Error).message}`);
     }
   }
+
+  try {
+    const rec = await reconcileImported(sourceId, seen, records.length);
+    result.reconcileGrace = rec.gracePeriodStarted;
+    result.reconcileHeld = rec.heldForReview;
+    if (rec.skipped) {
+      result.errors.push("reconciliation skipped — feed looked truncated");
+    }
+  } catch (e) {
+    result.errors.push(`reconcile failed: ${(e as Error).message}`);
+  }
+
   return result;
 }
+
+const emptyResult = (sourceId: string, error: string): IngestResult => ({
+  sourceId,
+  imported: 0,
+  updated: 0,
+  skipped: 0,
+  reconcileGrace: 0,
+  reconcileHeld: 0,
+  errors: [error],
+});
 
 /** Pull and ingest one configured feed source. */
 export async function ingestFeed(source: OfficialSource): Promise<IngestResult> {
   if (source.kind !== "feed" || !source.url || !source.feedFormat) {
-    return {
-      sourceId: source.id,
-      imported: 0,
-      updated: 0,
-      skipped: 0,
-      errors: ["source is not a configured feed"],
-    };
+    return emptyResult(source.id, "source is not a configured feed");
   }
   let payload: string;
   try {
     payload = await fetchText(source.url);
   } catch (e) {
-    return {
-      sourceId: source.id,
-      imported: 0,
-      updated: 0,
-      skipped: 0,
-      errors: [`fetch failed: ${(e as Error).message}`],
-    };
+    return emptyResult(source.id, `fetch failed: ${(e as Error).message}`);
   }
   return ingestPayload(
     source.id,

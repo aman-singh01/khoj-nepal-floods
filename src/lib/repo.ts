@@ -513,7 +513,11 @@ export async function upsertImported(
   };
 
   const [existing] = await db
-    .select({ id: persons.id })
+    .select({
+      id: persons.id,
+      moderationState: persons.moderationState,
+      feedMissingSince: persons.feedMissingSince,
+    })
     .from(persons)
     .where(eq(persons.pfifRecordId, key))
     .limit(1);
@@ -526,7 +530,16 @@ export async function upsertImported(
     // published or hidden this record since the last pull.
     const { moderationState: _omit, ...updatable } = personValues;
     void _omit;
-    await db.update(persons).set(updatable).where(eq(persons.id, personId));
+    // The record is back in the feed: clear any "missing from feed" flag, and
+    // if reconciliation had auto-held it, un-hold it.
+    const recovered = {
+      ...updatable,
+      feedMissingSince: null,
+      ...(existing.feedMissingSince && existing.moderationState === "pending"
+        ? { moderationState: "published" as const }
+        : {}),
+    };
+    await db.update(persons).set(recovered).where(eq(persons.id, personId));
     outcome = "updated";
   } else {
     const [row] = await db
@@ -570,6 +583,85 @@ export async function upsertImported(
   }
 
   return outcome;
+}
+
+export interface ReconcileResult {
+  /** rows that just dropped out of the feed — grace period started */
+  gracePeriodStarted: number;
+  /** rows missing long enough that they were held for a moderator */
+  heldForReview: number;
+  /** reconciliation skipped because the feed looked broken/truncated */
+  skipped: boolean;
+}
+
+/** Hours a record can be absent from its feed before it's held for review. */
+const FEED_MISSING_GRACE_HOURS = 24;
+
+/**
+ * After a feed pull, deal with records that are no longer in the source:
+ *  - first miss  -> stamp feed_missing_since (still public, grace period)
+ *  - missing > FEED_MISSING_GRACE_HOURS -> move to 'pending' (out of public
+ *    view, into the moderation queue). A moderator's own hide/publish is left
+ *    untouched; a record that reappears is auto-restored (see upsertImported).
+ *
+ * Skips entirely if the pull returned nothing, or far fewer rows than we hold
+ * for this source (a truncated / failed feed must not sweep records away).
+ */
+export async function reconcileImported(
+  sourceId: string,
+  seenExternalIds: Set<string>,
+  fetchedCount: number,
+): Promise<ReconcileResult> {
+  const db = await getDb();
+  const src = `import:${sourceId}`;
+  const prefix = `${sourceId}:`;
+
+  const rows = await db
+    .select({
+      id: persons.id,
+      pfifRecordId: persons.pfifRecordId,
+      moderationState: persons.moderationState,
+      feedMissingSince: persons.feedMissingSince,
+    })
+    .from(persons)
+    .where(eq(persons.source, src));
+
+  if (fetchedCount === 0 || fetchedCount < rows.length * 0.5) {
+    return { gracePeriodStarted: 0, heldForReview: 0, skipped: true };
+  }
+
+  const now = new Date();
+  const graceCutoff = new Date(
+    now.getTime() - FEED_MISSING_GRACE_HOURS * 3_600_000,
+  );
+  let gracePeriodStarted = 0;
+  let heldForReview = 0;
+
+  for (const r of rows) {
+    const externalId = r.pfifRecordId?.startsWith(prefix)
+      ? r.pfifRecordId.slice(prefix.length)
+      : null;
+    if (externalId == null || seenExternalIds.has(externalId)) continue;
+
+    if (!r.feedMissingSince) {
+      await db
+        .update(persons)
+        .set({ feedMissingSince: now })
+        .where(eq(persons.id, r.id));
+      gracePeriodStarted++;
+    } else if (
+      r.feedMissingSince < graceCutoff &&
+      r.moderationState === "published"
+    ) {
+      await db
+        .update(persons)
+        .set({ moderationState: "pending", updatedAt: now })
+        .where(eq(persons.id, r.id));
+      heldForReview++;
+    }
+  }
+
+  return { gracePeriodStarted, heldForReview, skipped: false };
 }
 
 export async function recordCountSince(minutes: number): Promise<number> {

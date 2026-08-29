@@ -37,5 +37,9 @@ export interface IngestResult {
   imported: number;
   updated: number;
   skipped: number;
+  /** records that dropped out of the feed and started their grace period */
+  reconcileGrace: number;
+  /** records missing long enough that they were held for a moderator */
+  reconcileHeld: number;
   errors: string[];
 }

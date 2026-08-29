@@ -9,6 +9,9 @@ import {
   allPublicForExport,
   upsertImported,
 } from "@/lib/repo";
+import { getDb } from "@/db";
+import { persons as personsTable } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import {
   OFFICIAL_SOURCES,
   sourcesForCountry,
@@ -44,6 +47,7 @@ function person(over: Partial<Person> = {}): Person {
     source: "web",
     pfifRecordId: null,
     linkedPersonId: null,
+    feedMissingSince: null,
     moderationState: "published",
     reportCount: 0,
     submitterIpHash: null,
@@ -196,6 +200,71 @@ describe("community-registry CSV (sodhera shape)", () => {
     const { persons } = await allPublicForExport();
     expect(persons.some((p) => p.source.startsWith("import:"))).toBe(false);
     expect(persons.some((p) => p.fullName === "Rajesh Syangtan")).toBe(false);
+  });
+});
+
+describe("reconciliation of records that leave the feed", () => {
+  const SRC = "recon-test";
+  const header =
+    '"Case number","Report type","Name","Broad place","Unverified"\n';
+  const rowA = '"RC-A","missing","Recon Alpha","Rasuwa","true"\n';
+  const rowB = '"RC-B","missing","Recon Bravo","Nuwakot","true"\n';
+  const rowC = '"RC-C","missing","Recon Charlie","Dhading","true"\n';
+  const mapping = {
+    externalId: "Case number",
+    recordType: "Report type",
+    fullName: "Name",
+    lastSeenLocation: "Broad place",
+    unverified: "Unverified",
+  };
+  const pull = (csv: string) => ingestPayload(SRC, csv, "csv", mapping);
+  const find = async (name: string) =>
+    (await searchPersons({ q: name })).find((p) => p.fullName === name);
+
+  it("starts a grace period when a record drops out (still public)", async () => {
+    await pull(header + rowA + rowB + rowC);
+    const r = await pull(header + rowA + rowB); // Charlie gone
+    expect(r.reconcileGrace).toBe(1);
+    expect(r.reconcileHeld).toBe(0);
+    expect(await find("Recon Charlie")).toBeTruthy(); // still visible
+  });
+
+  it("holds it for a moderator once it's been missing past the grace window", async () => {
+    const db = await getDb();
+    await db
+      .update(personsTable)
+      .set({ feedMissingSince: new Date(Date.now() - 30 * 3_600_000) })
+      .where(eq(personsTable.pfifRecordId, `${SRC}:RC-C`));
+
+    const r = await pull(header + rowA + rowB);
+    expect(r.reconcileHeld).toBe(1);
+    expect(await find("Recon Charlie")).toBeUndefined(); // dropped from public
+  });
+
+  it("auto-restores a record that comes back into the feed", async () => {
+    const r = await pull(header + rowA + rowB + rowC);
+    expect(r.updated).toBeGreaterThanOrEqual(1);
+    const back = await find("Recon Charlie");
+    expect(back).toBeTruthy();
+
+    const db = await getDb();
+    const [row] = await db
+      .select({ fms: personsTable.feedMissingSince })
+      .from(personsTable)
+      .where(eq(personsTable.pfifRecordId, `${SRC}:RC-C`));
+    expect(row.fms).toBeNull();
+  });
+
+  it("skips reconciliation when the feed looks truncated", async () => {
+    const r = await pull(header + rowA); // 1 row vs 3 held -> < 50%
+    expect(r.errors.join(" ")).toMatch(/truncated/);
+    // Bravo not swept away
+    const db = await getDb();
+    const [b] = await db
+      .select({ mod: personsTable.moderationState })
+      .from(personsTable)
+      .where(eq(personsTable.pfifRecordId, `${SRC}:RC-B`));
+    expect(b.mod).toBe("published");
   });
 });
 

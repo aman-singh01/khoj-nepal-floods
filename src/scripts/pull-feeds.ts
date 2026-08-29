@@ -21,7 +21,8 @@ async function main() {
     process.stdout.write(`Pulling ${feed.id} (${feed.name}) … `);
     const r = await ingestFeed(feed);
     console.log(
-      `imported ${r.imported}, updated ${r.updated}, skipped ${r.skipped}` +
+      `imported ${r.imported}, updated ${r.updated}, skipped ${r.skipped}, ` +
+        `flagged-missing ${r.reconcileGrace}, held-for-review ${r.reconcileHeld}` +
         (r.errors.length ? `, errors: ${r.errors.slice(0, 3).join("; ")}` : ""),
     );
   }
