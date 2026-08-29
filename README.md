@@ -8,8 +8,9 @@ for the event, and syncs records with a peer registry over the **PFIF**
 standard.
 
 <p>
-  <img alt="CI" src="https://img.shields.io/badge/CI-typecheck%20%2B%2065%20tests%20%2B%20build-2dd4bf">
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black">
+  <a href="https://github.com/aman-singh01/khoj-nepal-floods/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aman-singh01/khoj-nepal-floods/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Next.js 15" src="https://img.shields.io/badge/Next.js-15-black">
+  <img alt="tests" src="https://img.shields.io/badge/tests-65%20passing-2dd4bf">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
