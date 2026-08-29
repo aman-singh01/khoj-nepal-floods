@@ -26,9 +26,12 @@ next-env.d.ts
 .env.local
 .env*.local
 
+# editor / tooling
+.idea/
+.vscode/
+.claude/
+
 # misc
 .DS_Store
 *.log
 /coverage
-.idea/
-.vscode/
