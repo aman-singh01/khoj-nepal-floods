@@ -24,6 +24,13 @@ async function tick() {
   }
 }
 
-console.log(`Watching event feeds every ${hours}h. Ctrl+C to stop.`);
-await tick();
-setInterval(tick, intervalMs);
+async function main() {
+  console.log(`Watching event feeds every ${hours}h. Ctrl+C to stop.`);
+  await tick();
+  setInterval(tick, intervalMs);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
