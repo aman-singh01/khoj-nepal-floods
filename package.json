@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Khoj - a missing-persons finder to help families reconnect after the Nepal floods",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,6 +16,7 @@
     "feeds:pull": "tsx src/scripts/pull-feeds.ts",
     "updates:pull": "tsx src/scripts/pull-updates.ts",
     "data:watch": "tsx src/scripts/watch-data.ts",
+    "shots": "node scripts/shots.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
@@ -28,6 +33,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",

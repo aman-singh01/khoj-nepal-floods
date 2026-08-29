@@ -13,6 +13,11 @@ next-env.d.ts
 # local uploads (dev only; production uses blob storage)
 /public/uploads
 
+# playwright
+/test-results
+/playwright-report
+/.playwright
+
 # env
 .env
 .env.local
