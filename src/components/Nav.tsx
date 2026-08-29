@@ -31,6 +31,12 @@ export function Nav() {
             Report someone
           </Link>
           <Link
+            href="/official"
+            className="hidden rounded-lg px-3 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text sm:block"
+          >
+            Official help
+          </Link>
+          <Link
             href="/about"
             className="rounded-lg px-3 py-1.5 font-medium text-muted transition hover:bg-surface-2 hover:text-text"
           >

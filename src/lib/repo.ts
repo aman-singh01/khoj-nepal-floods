@@ -14,6 +14,8 @@ import { scoreName, tokenize, MATCH_THRESHOLD } from "./fuzzy";
 import { screenText } from "./safety";
 import { RECORD_TTL_DAYS } from "./env";
 import type { PersonInput, NoteInput } from "./validation";
+import { sourceById } from "@/config/official-sources";
+import type { NormalizedRecord } from "./feeds/types";
 
 export interface SubmitContext {
   ipHash: string | null;
@@ -39,6 +41,8 @@ export interface PublicPerson {
   authorName: string | null;
   authorRelation: string | null;
   authorIsVerified: boolean;
+  /** Display name of the official source this record was imported from, if any. */
+  importedFrom: string | null;
   createdAt: string;
   updatedAt: string;
   expiresAt: string;
@@ -75,10 +79,18 @@ export function toPublicPerson(p: Person): PublicPerson {
     authorName: p.authorName,
     authorRelation: p.authorRelation,
     authorIsVerified: p.authorIsVerified,
+    importedFrom: importedFromLabel(p.source),
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
     expiresAt: p.expiresAt.toISOString(),
   };
+}
+
+/** "import:np-nrcs-rfl" -> "Nepal Red Cross Society — Restoring Family Links". */
+export function importedFromLabel(source: string): string | null {
+  if (!source.startsWith("import:")) return null;
+  const id = source.slice("import:".length);
+  return sourceById(id)?.name ?? id;
 }
 
 export function toPublicNote(n: Note): PublicNote {
@@ -420,12 +432,18 @@ export async function resolveReport(id: string) {
 
 // --- PFIF export ------------------------------------------------------------
 
-export async function allPublicForExport() {
+export async function allPublicForExport(since?: Date) {
   const db = await getDb();
+  const where = since
+    ? and(
+        eq(persons.moderationState, "published"),
+        gte(persons.updatedAt, since),
+      )!
+    : eq(persons.moderationState, "published");
   const ps = await db
     .select()
     .from(persons)
-    .where(eq(persons.moderationState, "published"))
+    .where(where)
     .orderBy(desc(persons.createdAt))
     .limit(5000);
 
@@ -443,6 +461,100 @@ export async function allPublicForExport() {
     : [];
 
   return { persons: ps, notes: ns };
+}
+
+// --- Feed ingestion (official / partner sources) --------------------------
+
+/**
+ * Upsert a normalised record from an external feed. Keyed on
+ * `import:<sourceId>:<externalId>` so re-running a feed updates in place.
+ * These records are marked as a verified source and skip the moderation hold.
+ */
+export async function upsertImported(
+  rec: NormalizedRecord,
+  sourceId: string,
+): Promise<"imported" | "updated"> {
+  const db = await getDb();
+  const key = `${sourceId}:${rec.externalId}`.slice(0, 300);
+  const src = `import:${sourceId}`;
+
+  const personValues = {
+    recordType: rec.recordType,
+    fullName: rec.fullName,
+    nameNormalized: normalizeName(`${rec.fullName} ${rec.alsoKnownAs ?? ""}`),
+    alsoKnownAs: rec.alsoKnownAs ?? null,
+    ageYears: rec.ageYears ?? null,
+    ageIsApprox: rec.ageIsApprox ?? false,
+    sex: rec.sex ?? ("unknown" as const),
+    nationality: rec.nationality ?? null,
+    homeLocation: rec.homeLocation ?? null,
+    lastSeenLocation: rec.lastSeenLocation ?? null,
+    lastSeenAt: rec.lastSeenAt ?? null,
+    description: rec.description ?? null,
+    photoUrl: rec.photoUrl ?? null,
+    status:
+      rec.status ?? (rec.recordType === "seeking" ? "missing" : "unknown"),
+    authorName: rec.authorName ?? null,
+    authorIsVerified: true,
+    source: src,
+    moderationState: "published" as const,
+    updatedAt: new Date(),
+  };
+
+  const [existing] = await db
+    .select({ id: persons.id })
+    .from(persons)
+    .where(eq(persons.pfifRecordId, key))
+    .limit(1);
+
+  let personId: string;
+  let outcome: "imported" | "updated";
+  if (existing) {
+    personId = existing.id;
+    await db.update(persons).set(personValues).where(eq(persons.id, personId));
+    outcome = "updated";
+  } else {
+    const [row] = await db
+      .insert(persons)
+      .values({
+        ...personValues,
+        pfifRecordId: key,
+        editToken: randomUUID(),
+        expiresAt: ttlDate(),
+      })
+      .returning({ id: persons.id });
+    personId = row!.id;
+    outcome = "imported";
+  }
+
+  for (const n of rec.notes ?? []) {
+    const noteKey = `${sourceId}:${n.externalId}`.slice(0, 300);
+    const noteValues = {
+      personId,
+      noteType: "general" as const,
+      text: n.text,
+      statusReported: n.status ?? null,
+      lastKnownLocation: n.lastKnownLocation ?? null,
+      authorName: n.authorName ?? null,
+      authorIsVerified: true,
+      source: src,
+      moderationState: "published" as const,
+      pfifNoteId: noteKey,
+      createdAt: n.createdAt ?? undefined,
+    };
+    const [exN] = await db
+      .select({ id: notes.id })
+      .from(notes)
+      .where(eq(notes.pfifNoteId, noteKey))
+      .limit(1);
+    if (exN) {
+      await db.update(notes).set(noteValues).where(eq(notes.id, exN.id));
+    } else {
+      await db.insert(notes).values(noteValues);
+    }
+  }
+
+  return outcome;
 }
 
 export async function recordCountSince(minutes: number): Promise<number> {

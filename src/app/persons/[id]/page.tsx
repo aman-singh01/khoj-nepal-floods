@@ -13,6 +13,7 @@ import {
   ReportRecordForm,
   RemoveRecordForm,
 } from "@/components/PersonForms";
+import { OfficialResources } from "@/components/OfficialResources";
 import { avatarHue, formatAge, relativeTime, STATUS_LABELS } from "@/lib/ui";
 import { SITE_URL } from "@/lib/env";
 
@@ -154,8 +155,12 @@ export default async function PersonPage({
         <p className="border-t border-border px-5 py-2.5 text-xs text-muted sm:px-6">
           Added {relativeTime(person.createdAt)} · last updated{" "}
           {relativeTime(person.updatedAt)}
-          {person.authorName && ` · by ${person.authorName}`}
-          {person.authorRelation && ` (${person.authorRelation})`}
+          {person.importedFrom
+            ? ` · imported from ${person.importedFrom}`
+            : person.authorName && ` · by ${person.authorName}`}
+          {!person.importedFrom &&
+            person.authorRelation &&
+            ` (${person.authorRelation})`}
         </p>
       </header>
 
@@ -167,6 +172,8 @@ export default async function PersonPage({
           </p>
         </section>
       )}
+
+      <OfficialResources nationality={person.nationality} />
 
       <section>
         <div className="mb-4 flex items-baseline gap-3">

@@ -23,17 +23,23 @@ export function Footer() {
         <div>
           <h2 className="mb-2 font-display text-sm font-semibold">Official tracing</h2>
           <p className="text-muted">
-            For formal help, contact the{" "}
-            <a
+            Government and Red Cross services are listed on the{" "}
+            <Link
+              href="/official"
               className="font-medium text-accent-strong underline underline-offset-2"
+            >
+              Official help
+            </Link>{" "}
+            page, including the{" "}
+            <a
+              className="underline underline-offset-2"
               href="https://familylinks.icrc.org/"
               target="_blank"
               rel="noopener noreferrer"
             >
               ICRC Restoring Family Links
             </a>{" "}
-            programme or the Nepal Red Cross Society. In an emergency, call local
-            authorities.
+            network. In an emergency, call local authorities.
           </p>
         </div>
 

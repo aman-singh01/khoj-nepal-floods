@@ -48,7 +48,9 @@ export function PersonCard({ person }: { person: PublicPerson }) {
           {person.recordType === "seeking" ? "Being sought" : "Information posted"}
           {" · updated "}
           {relativeTime(person.updatedAt)}
-          {person.authorIsVerified && " · verified source"}
+          {person.importedFrom
+            ? ` · via ${person.importedFrom}`
+            : person.authorIsVerified && " · verified source"}
         </p>
       </div>
     </Link>
