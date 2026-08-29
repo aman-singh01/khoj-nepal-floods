@@ -151,10 +151,15 @@ by default). Pull live data once: `npm run feeds:pull && npm run updates:pull`.
 
 ## Deploying
 
-Vercel + Neon/Supabase + Vercel Blob, ~15 minutes — see
-**[`docs/DEPLOY.md`](docs/DEPLOY.md)**. `vercel.json` wires two 6-hourly crons
-(`/api/updates/refresh`, `/api/feeds/refresh`); the GitHub Action is the
-plan-limit-free alternative.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Faman-singh01%2Fkhoj-nepal-floods&project-name=khoj&repository-name=khoj-nepal-floods&env=DATABASE_URL,IP_HASH_SALT,MODERATION_TOKEN,CRON_SECRET,NEXT_PUBLIC_SITE_URL,BLOB_READ_WRITE_TOKEN&envDescription=Postgres%20URL%20%2B%20secrets%20%2B%20site%20URL&envLink=https%3A%2F%2Fgithub.com%2Faman-singh01%2Fkhoj-nepal-floods%2Fblob%2Fmain%2Fdocs%2FDEPLOY.md)
+
+The button imports the repo and prompts for the env vars. You still need a
+Postgres database (Vercel → Storage → **Neon** injects `DATABASE_URL`
+automatically) and one `npm run db:migrate` against it. Full walk-through:
+**[`docs/DEPLOY.md`](docs/DEPLOY.md)**.
+
+`vercel.json` wires two 6-hourly crons (`/api/updates/refresh`,
+`/api/feeds/refresh`); the GitHub Action is the plan-limit-free alternative.
 
 ## Integrations & operating notes
 
