@@ -1,0 +1,29 @@
+name: Pull event updates
+
+# Keeps the /updates stream fresh on a schedule, independent of site traffic.
+# Needs a repo secret DATABASE_URL pointing at the production Postgres
+# (the same one the deployed site uses, with the schema already migrated).
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch: {} # manual "Run workflow" button
+
+concurrency:
+  group: pull-updates
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Pull feeds
+        run: npm run updates:pull
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

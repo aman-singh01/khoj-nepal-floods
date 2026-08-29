@@ -120,10 +120,17 @@ humanitarian coverage of the emergency. Configured in
 **How it refreshes:**
 - **On page view** — a visit to `/updates` or `/` triggers a pull if the last
   one was over `UPDATES_TTL_MINUTES` (12) ago. De-duped across concurrent
-  viewers. No cron required.
-- **Scheduled (livelier)** — `npm run updates:pull`, or
-  `POST /api/updates/refresh` with `authorization: <CRON_SECRET>` (Vercel Cron:
-  `{ "crons": [{ "path": "/api/updates/refresh", "schedule": "*/10 * * * *" }] }`).
+  viewers. No cron required, but nothing pulls between visits.
+- **Scheduled** (runs regardless of traffic — recommended):
+  - **Vercel Cron** — [`vercel.json`](../vercel.json) is set to hit
+    `/api/updates/refresh` every 6 h. Set a `CRON_SECRET` env var in the
+    project; Vercel sends it as the `Authorization` header automatically.
+    (Vercel Hobby caps cron at once per day — change the schedule to
+    `0 6 * * *` or use the GitHub Action instead.)
+  - **GitHub Actions** — [`.github/workflows/pull-updates.yml`](../.github/workflows/pull-updates.yml)
+    runs `npm run updates:pull` every 6 h. Add a repo secret `DATABASE_URL`
+    pointing at the production Postgres. No plan limits.
+  - **Anywhere** — `npm run updates:pull` from cron / a systemd timer.
 
 **Trust & moderation:** every item carries `official` / `humanitarian` / `news`
 and links to its origin. Khoj does not fact-check them. On `/moderation`,
