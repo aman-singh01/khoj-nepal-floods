@@ -3,7 +3,8 @@ import Link from "next/link";
 import { SearchForm } from "@/components/SearchForm";
 import { PersonCard } from "@/components/PersonCard";
 import { SetupNotice } from "@/components/SetupNotice";
-import { searchPersons, type PublicPerson } from "@/lib/repo";
+import { LiveRefresh } from "@/components/LiveRefresh";
+import { feedVersion, searchPersons, type PublicPerson } from "@/lib/repo";
 import { STATUSES, RECORD_TYPES } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -35,9 +36,13 @@ export default async function PersonsPage({
   const hasQuery = Boolean(q || status || recordType || nationality);
 
   let results: PublicPerson[] | null = null;
+  let version: string | null = null;
   let error: unknown = null;
   try {
-    results = await searchPersons({ q, status, recordType, nationality });
+    [results, version] = await Promise.all([
+      searchPersons({ q, status, recordType, nationality }),
+      feedVersion(),
+    ]);
   } catch (e) {
     error = e;
   }
@@ -51,13 +56,20 @@ export default async function PersonsPage({
 
       {results && (
         <>
-          <p className="text-sm text-muted">
-            {hasQuery
-              ? results.length === 1
-                ? "1 record matches your search"
-                : `${results.length} records match your search`
-              : `Showing ${results.length} most recent record${results.length === 1 ? "" : "s"}`}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted">
+              {hasQuery
+                ? results.length === 1
+                  ? "1 record matches your search"
+                  : `${results.length} records match your search`
+                : `Showing ${results.length} most recent record${results.length === 1 ? "" : "s"}`}
+            </p>
+            <LiveRefresh
+              key="/api/live/feed"
+              src="/api/live/feed"
+              initialVersion={version}
+            />
+          </div>
 
           {results.length === 0 && (
             <div className="card flex flex-col items-center gap-3 p-8 text-center">

@@ -3,16 +3,28 @@ import { SearchForm } from "@/components/SearchForm";
 import { PersonCard } from "@/components/PersonCard";
 import { Callout } from "@/components/Callout";
 import { SetupNotice } from "@/components/SetupNotice";
-import { recentPersons, stats, type PublicPerson, type Stats } from "@/lib/repo";
+import { LiveRefresh } from "@/components/LiveRefresh";
+import {
+  feedVersion,
+  recentPersons,
+  stats,
+  type PublicPerson,
+  type Stats,
+} from "@/lib/repo";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  let data: { recent: PublicPerson[]; counts: Stats } | null = null;
+  let data: { recent: PublicPerson[]; counts: Stats; version: string } | null =
+    null;
   let error: unknown = null;
   try {
-    const [recent, counts] = await Promise.all([recentPersons(9), stats()]);
-    data = { recent, counts };
+    const [recent, counts, version] = await Promise.all([
+      recentPersons(9),
+      stats(),
+      feedVersion(),
+    ]);
+    data = { recent, counts, version };
   } catch (e) {
     error = e;
   }
@@ -70,8 +82,15 @@ export default async function HomePage() {
 
       {data && data.recent.length > 0 && (
         <section className="space-y-4">
-          <div className="flex items-baseline justify-between border-b border-border pb-2">
-            <h2 className="font-display text-lg font-semibold">Recently added</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-2">
+            <div className="flex items-baseline gap-3">
+              <h2 className="font-display text-lg font-semibold">Recently added</h2>
+              <LiveRefresh
+                key="/api/live/feed"
+                src="/api/live/feed"
+                initialVersion={data.version}
+              />
+            </div>
             <Link
               href="/persons"
               className="text-sm font-medium text-accent-strong underline underline-offset-2"

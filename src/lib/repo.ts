@@ -454,3 +454,74 @@ export async function recordCountSince(minutes: number): Promise<number> {
     .where(gte(persons.createdAt, since));
   return row?.n ?? 0;
 }
+
+// --- Live-update version stamps -------------------------------------------
+// Each is a short string that changes iff something a viewer would care about
+// changed. Clients poll these and call router.refresh() when the value moves.
+
+/** Version for a single record page (header + status + sightings timeline). */
+export async function personVersion(id: string): Promise<string | null> {
+  const db = await getDb();
+  const [p] = await db
+    .select({
+      updatedAt: persons.updatedAt,
+      moderationState: persons.moderationState,
+    })
+    .from(persons)
+    .where(eq(persons.id, id))
+    .limit(1);
+  if (!p) return null;
+
+  const [n] = await db
+    .select({
+      count: sql<number>`count(*)::int`,
+      latest: sql<string | null>`max(${notes.createdAt})`,
+    })
+    .from(notes)
+    .where(and(eq(notes.personId, id), eq(notes.moderationState, "published")));
+
+  return [
+    p.updatedAt.toISOString(),
+    p.moderationState,
+    n?.count ?? 0,
+    n?.latest ?? "",
+  ].join("|");
+}
+
+/** Version for the public feed: home "recently added", counters, search list. */
+export async function feedVersion(): Promise<string> {
+  const db = await getDb();
+  const [row] = await db
+    .select({
+      count: sql<number>`count(*)::int`,
+      maxUpdated: sql<string | null>`max(${persons.updatedAt})`,
+    })
+    .from(persons)
+    .where(eq(persons.moderationState, "published"));
+  return [row?.count ?? 0, row?.maxUpdated ?? ""].join("|");
+}
+
+/** Version for the moderation queue (pending records/notes + open reports). */
+export async function moderationVersion(): Promise<string> {
+  const db = await getDb();
+  const [p] = await db
+    .select({ c: sql<number>`count(*)::int`, m: sql<string | null>`max(${persons.createdAt})` })
+    .from(persons)
+    .where(eq(persons.moderationState, "pending"));
+  const [n] = await db
+    .select({ c: sql<number>`count(*)::int`, m: sql<string | null>`max(${notes.createdAt})` })
+    .from(notes)
+    .where(eq(notes.moderationState, "pending"));
+  const [r] = await db
+    .select({ c: sql<number>`count(*)::int`, m: sql<string | null>`max(${abuseReports.createdAt})` })
+    .from(abuseReports)
+    .where(eq(abuseReports.resolved, false));
+  return [
+    p?.c ?? 0,
+    p?.m ?? "",
+    n?.c ?? 0,
+    n?.m ?? "",
+    r?.c ?? 0,
+    r?.m ?? "",
+  ].join("|");
+}

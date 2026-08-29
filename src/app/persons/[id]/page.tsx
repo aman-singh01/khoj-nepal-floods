@@ -3,9 +3,10 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { getPersonPublic } from "@/lib/repo";
+import { getPersonPublic, personVersion } from "@/lib/repo";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Callout } from "@/components/Callout";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import {
   AddNoteForm,
   ContactForm,
@@ -43,7 +44,10 @@ export default async function PersonPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  const data = await getPersonPublic(id).catch(() => null);
+  const [data, version] = await Promise.all([
+    getPersonPublic(id).catch(() => null),
+    personVersion(id).catch(() => null),
+  ]);
   if (!data) notFound();
 
   const { person, notes } = data;
@@ -165,9 +169,16 @@ export default async function PersonPage({
       )}
 
       <section>
-        <h2 className="mb-4 font-display text-lg font-semibold">
-          Updates &amp; sightings
-        </h2>
+        <div className="mb-4 flex items-baseline gap-3">
+          <h2 className="font-display text-lg font-semibold">
+            Updates &amp; sightings
+          </h2>
+          <LiveRefresh
+            key={`/api/live/person/${person.id}`}
+            src={`/api/live/person/${person.id}`}
+            initialVersion={version}
+          />
+        </div>
         {notes.length === 0 ? (
           <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
             No updates yet. If you know anything, add it below.

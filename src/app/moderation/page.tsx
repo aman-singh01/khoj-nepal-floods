@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { isModerator } from "@/lib/moderation-auth";
 import { moderate, moderatorLogout } from "@/app/actions";
-import { moderationQueue } from "@/lib/repo";
+import { moderationQueue, moderationVersion } from "@/lib/repo";
 import { ModLogin } from "@/components/ModLogin";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import { Callout } from "@/components/Callout";
 import { REASON_LABELS } from "@/lib/validation";
 import { relativeTime } from "@/lib/ui";
@@ -53,12 +54,20 @@ export default async function ModerationPage() {
     );
   }
 
-  const { pendingPersons, pendingNotes, openReports } = await moderationQueue();
+  const [{ pendingPersons, pendingNotes, openReports }, version] =
+    await Promise.all([moderationQueue(), moderationVersion()]);
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold">Moderation queue</h1>
+        <div className="flex items-baseline gap-3">
+          <h1 className="font-display text-2xl font-semibold">Moderation queue</h1>
+          <LiveRefresh
+            key="/api/live/moderation"
+            src="/api/live/moderation"
+            initialVersion={version}
+          />
+        </div>
         <form action={moderatorLogout}>
           <button className="text-sm text-muted underline underline-offset-2 hover:text-text">
             Sign out

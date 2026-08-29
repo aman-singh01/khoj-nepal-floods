@@ -6,6 +6,9 @@ import {
   searchPersons,
   getPersonPublic,
   stats,
+  personVersion,
+  feedVersion,
+  moderationVersion,
 } from "./repo";
 import type { PersonInput } from "./validation";
 
@@ -117,5 +120,54 @@ describe("stats", () => {
     await createPerson(baseInput({ fullName: "Counted Person" }), ctx);
     const after = await stats();
     expect(after.seeking).toBeGreaterThan(before.seeking);
+  });
+});
+
+describe("live version stamps", () => {
+  it("personVersion moves when a sighting is added", async () => {
+    const { id } = await createPerson(baseInput({ fullName: "Versioned One" }), ctx);
+    const v1 = await personVersion(id);
+    expect(v1).not.toBeNull();
+
+    await addNote(
+      {
+        personId: id,
+        noteType: "sighting",
+        text: "Saw them at the bridge",
+        statusReported: undefined,
+        lastKnownLocation: undefined,
+        authorName: "Witness",
+        authorRelation: undefined,
+        authorEmail: undefined,
+        authorPhone: undefined,
+      },
+      ctx,
+    );
+    const v2 = await personVersion(id);
+    expect(v2).not.toBe(v1);
+  });
+
+  it("personVersion is null for an unknown id", async () => {
+    expect(
+      await personVersion("00000000-0000-0000-0000-000000000000"),
+    ).toBeNull();
+  });
+
+  it("feedVersion moves when a new record is published", async () => {
+    const v1 = await feedVersion();
+    await createPerson(baseInput({ fullName: "Feed Mover" }), ctx);
+    expect(await feedVersion()).not.toBe(v1);
+  });
+
+  it("moderationVersion moves when a record is held for review", async () => {
+    const v1 = await moderationVersion();
+    await createPerson(
+      baseInput({
+        fullName: "Queue Mover",
+        description: "Please wire $200 to release him.",
+      }),
+      ctx,
+    );
+    expect(await moderationVersion()).not.toBe(v1);
   });
 });

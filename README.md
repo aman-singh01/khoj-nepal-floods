@@ -22,6 +22,7 @@ services.
 | Moderation | `/moderation` queue (token-gated) to publish/hide held records and resolve reports. |
 | Interop | `GET /api/pfif` exports every published record as [PFIF 1.4](https://zesty.ca/pfif/1.4/) for import by other trackers. |
 | Data retention | Records carry an `expires_at` (default 180 days) and can be removed on request. |
+| Live updates | Record pages, the home feed + counters, search results, and the moderation queue refresh themselves when the underlying data changes. Each page polls a tiny `/api/live/*` version endpoint (~10s foreground, ~20s background, backs off on error) and re-fetches the server render on a change. No websockets or extra infrastructure; a true push transport (Supabase Realtime / Pusher) can be layered on the same `LiveRefresh` component later. |
 | Accessibility | Labelled controls, keyboard focus styles, reduced-motion support, works without JavaScript for search and (progressively) forms. |
 
 ## Stack
