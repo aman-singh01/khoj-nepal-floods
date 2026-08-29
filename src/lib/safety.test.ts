@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { screenText, isBotSubmission } from "./safety";
+import { screenText, isBotSubmission, scrubContacts } from "./safety";
 
 describe("screenText", () => {
   it("passes an ordinary description", () => {
@@ -24,6 +24,32 @@ describe("screenText", () => {
     const r = screenText("call me on +977 9812345678 for info");
     expect(r.hold).toBe(true);
     expect(r.reasons.join(" ")).toMatch(/phone number or email/i);
+  });
+});
+
+describe("scrubContacts", () => {
+  it("removes labelled phone numbers and family contacts", () => {
+    const out = scrubContacts(
+      "Age 21. Last seen at Timure. Contact: 9863267631. Family contacts: 9848944392, 9862739811.",
+    );
+    expect(out).toBe("Age 21. Last seen at Timure.");
+  });
+
+  it("removes bare phone-like runs and emails", () => {
+    const out = scrubContacts("Call +977 980-1234567 or write me@example.com now");
+    expect(out).not.toMatch(/\d{5}/);
+    expect(out).not.toContain("@");
+  });
+
+  it("leaves clean text and short numbers alone", () => {
+    expect(scrubContacts("Wearing a red jacket, about 45 years old")).toBe(
+      "Wearing a red jacket, about 45 years old",
+    );
+  });
+
+  it("returns undefined for empty / all-scrubbed input", () => {
+    expect(scrubContacts("")).toBeUndefined();
+    expect(scrubContacts("Contact: 9863267631")).toBeUndefined();
   });
 });
 

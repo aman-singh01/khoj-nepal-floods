@@ -18,6 +18,8 @@ export interface NormalizedRecord {
   photoUrl?: string;
   status?: (typeof STATUSES)[number];
   authorName?: string;
+  /** Source flags this record as an unverified community report. */
+  unverified?: boolean;
   notes?: NormalizedNote[];
 }
 

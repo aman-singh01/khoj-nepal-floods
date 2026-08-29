@@ -270,7 +270,38 @@ export const OFFICIAL_SOURCES: OfficialSource[] = [
     verified: false,
   },
 
-  // ── Machine-readable feeds (OFF until an agreement is in place) ─────────
+  // ── Machine-readable feeds ─────────────────────────────────────────────
+  {
+    id: "sodhera-flood",
+    name: "flood.sodhera.com — community registry",
+    authority: "Sodhera Intelligence Pvt. Ltd. (community project, not official)",
+    country: "np",
+    kind: "feed",
+    purpose:
+      "A peer volunteer registry for this flood. Its records are community-reported and mostly unverified; Khoj imports them as such and attributes them.",
+    url: "https://flood.sodhera.com/api/export",
+    phone: null,
+    feedFormat: "csv",
+    feedMapping: {
+      externalId: "Case number",
+      recordType: "Report type",
+      fullName: "Name",
+      sex: "Gender",
+      ageYears: "Approximate age",
+      lastSeenLocation: "Broad place",
+      lastSeenAt: "Event date",
+      description: "Identifying details",
+      status: "Status",
+      unverified: "Unverified",
+    },
+    enabled: true,
+    verified: false,
+    verifiedOn: "2026-08-29",
+    verifiedBy:
+      "public /api/export, no stated terms; one-way import pending a two-way sync (docs/outreach-sodhera.md)",
+    notes:
+      "Imported records: marked unverified, shown 'via flood.sodhera.com', phone numbers stripped from text, removed rows skipped, excluded from Khoj's own PFIF export.",
+  },
   {
     id: "feed-partner-pfif",
     name: "Partner agency PFIF feed",

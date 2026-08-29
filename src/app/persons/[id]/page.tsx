@@ -164,6 +164,15 @@ export default async function PersonPage({
         </p>
       </header>
 
+      {person.importedFrom && !person.authorIsVerified && (
+        <Callout tone="warn" title="Unverified — imported from another registry">
+          This record was pulled from{" "}
+          <span className="font-medium">{person.importedFrom}</span>, a community
+          board, and has not been verified by Khoj or an official source. Treat it
+          as a lead, not a confirmation.
+        </Callout>
+      )}
+
       {person.description && (
         <section>
           <h2 className="mb-2 font-display text-lg font-semibold">Description</h2>

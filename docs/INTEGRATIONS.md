@@ -71,15 +71,23 @@ Response: `{ "imported": N, "updated": N, "skipped": N, "errors": [...] }`.
 1. In `src/config/official-sources.ts`, on a `kind: "feed"` entry, set a real
    `url`, pick `feedFormat` (`pfif` | `csv` | `json`), set `feedMapping` for
    csv/json (our field → their column), and `enabled: true`.
-2. Run `npm run feeds:pull` on a schedule:
-   - **Vercel Cron** — add to `vercel.json`:
-     ```json
-     { "crons": [{ "path": "/api/cron/feeds", "schedule": "*/15 * * * *" }] }
-     ```
-     (add a thin `/api/cron/feeds` route that checks the `CRON_SECRET` header
-     and calls `ingestFeed` for each `enabledFeeds()`), **or**
-   - **GitHub Actions** — a workflow on a `schedule:` trigger running
-     `npm run feeds:pull` with `DATABASE_URL` in secrets.
+2. It runs on a schedule alongside the news pull — see section 4 below
+   (`vercel.json` cron `/api/feeds/refresh`, or the GitHub Action's second step,
+   or `npm run data:watch` / `npm run feeds:pull`).
+
+**Currently enabled:** `sodhera-flood` — a one-way import of the peer community
+registry at `flood.sodhera.com/api/export` (CSV). Imported records are:
+- shown **"via flood.sodhera.com"** with an *unverified* badge and a callout
+- run through `scrubContacts` — phone numbers, emails, passport/ID numbers and
+  DOB are stripped from the free-text field; anything contact-shaped that
+  survives holds the record for a moderator
+- keyed on their case number (idempotent), rows marked removed/deleted skipped
+- **excluded from Khoj's own `/api/pfif` export**, so data can't loop
+- left untouched by re-pulls if a moderator has since published/hidden them
+
+This is pending a proper two-way arrangement — see
+[`outreach-sodhera.md`](outreach-sodhera.md). To turn it off, set
+`enabled: false` on that entry.
 
 ### c. Ad-hoc URL pull (no config change)
 

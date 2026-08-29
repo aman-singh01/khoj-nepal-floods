@@ -77,15 +77,35 @@ export function csvToRecords(
   for (const r of rows.slice(1)) {
     const fullName = get(r, "fullName");
     if (!fullName) continue;
+
+    // Drop rows the source marks as removed / deleted / withdrawn / spam.
+    const rawStatus = get(r, "status")?.toLowerCase() ?? "";
+    if (/\b(remov|delet|withdraw|spam|reject)/.test(rawStatus)) continue;
+
     const ageRaw = get(r, "ageYears");
     const age = ageRaw ? Number(ageRaw.replace(/[^\d]/g, "")) : undefined;
     const sexRaw = get(r, "sex")?.toLowerCase();
 
+    // "missing" / "seeking" -> a family is looking; anything else -> information.
+    const rt = (get(r, "recordType") ?? "").toLowerCase();
+    const recordType: NormalizedRecord["recordType"] =
+      rt.includes("miss") || rt.includes("seek") ? "seeking" : "info";
+
+    const status: NormalizedRecord["status"] =
+      recordType === "seeking"
+        ? "missing"
+        : (coerceStatus(get(r, "status")) ?? "safe");
+
+    const unverifiedRaw = get(r, "unverified")?.toLowerCase();
+    const unverified =
+      unverifiedRaw === "true" || unverifiedRaw === "1" || unverifiedRaw === "yes";
+
     out.push({
       externalId: get(r, "externalId") ?? fullName,
-      recordType: "info", // camp rosters describe people who are accounted for
+      recordType,
       fullName,
       ageYears: Number.isFinite(age) && age! > 0 && age! < 130 ? age : undefined,
+      ageIsApprox: age != null,
       sex:
         sexRaw === "female" || sexRaw === "male" || sexRaw === "other"
           ? sexRaw
@@ -93,10 +113,18 @@ export function csvToRecords(
       nationality: get(r, "nationality"),
       homeLocation: get(r, "homeLocation"),
       lastSeenLocation: get(r, "lastSeenLocation"),
+      lastSeenAt: parseFeedDate(get(r, "lastSeenAt")),
       description: get(r, "description"),
-      status: coerceStatus(get(r, "status")) ?? "safe",
+      status,
       authorName: get(r, "authorName"),
+      unverified: mapping.unverified ? unverified : undefined,
     });
   }
   return out;
+}
+
+function parseFeedDate(v: string | undefined): Date | undefined {
+  if (!v) return undefined;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? undefined : d;
 }

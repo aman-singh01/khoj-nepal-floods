@@ -3,7 +3,12 @@ import { parsePfif } from "./pfif";
 import { parseCsv, csvToRecords } from "./csv";
 import { ingestPayload } from "./index";
 import { toPfifDocument } from "@/lib/pfif";
-import { searchPersons, getPersonPublic } from "@/lib/repo";
+import {
+  searchPersons,
+  getPersonPublic,
+  allPublicForExport,
+  upsertImported,
+} from "@/lib/repo";
 import {
   OFFICIAL_SOURCES,
   sourcesForCountry,
@@ -140,6 +145,60 @@ describe("ingestPayload", () => {
   });
 });
 
+// A slice of flood.sodhera.com's /api/export format.
+const SODHERA_CSV =
+  '"Case number","Report type","Name","Gender","Approximate age","Broad place","Event date","Identifying details","Status","Unverified"\n' +
+  '"RF-2026-000148","missing","Rajesh Syangtan","male","47","Rasuwa","2026-08-26T08:25:00+00:00","Tattoo on hand. Contact: 9863267631. Family contacts: 9848944392","active","true"\n' +
+  '"RF-2026-000136","found","Rinjen Sherpa","unknown","35","","","Rescued and reported safe near Syafrubesi.","active","true"\n' +
+  '"RF-2026-000099","missing","Removed Case","male","20","Rasuwa","","x","removed","true"\n';
+
+const SODHERA_MAPPING = {
+  externalId: "Case number",
+  recordType: "Report type",
+  fullName: "Name",
+  sex: "Gender",
+  ageYears: "Approximate age",
+  lastSeenLocation: "Broad place",
+  lastSeenAt: "Event date",
+  description: "Identifying details",
+  status: "Status",
+  unverified: "Unverified",
+};
+
+describe("community-registry CSV (sodhera shape)", () => {
+  it("maps report type to record type and drops removed rows", () => {
+    const recs = csvToRecords(SODHERA_CSV, SODHERA_MAPPING);
+    expect(recs).toHaveLength(2); // "removed" row skipped
+    const missing = recs.find((r) => r.fullName === "Rajesh Syangtan")!;
+    expect(missing.recordType).toBe("seeking");
+    expect(missing.status).toBe("missing");
+    expect(missing.unverified).toBe(true);
+    const found = recs.find((r) => r.fullName === "Rinjen Sherpa")!;
+    expect(found.recordType).toBe("info");
+    expect(found.status).toBe("safe");
+  });
+
+  it("import marks records unverified and strips phone numbers", async () => {
+    const recs = csvToRecords(SODHERA_CSV, SODHERA_MAPPING);
+    for (const rec of recs) await upsertImported(rec, "sodhera-flood");
+
+    const hits = await searchPersons({ q: "Rajesh Syangtan" });
+    const hit = hits.find((p) => p.fullName === "Rajesh Syangtan")!;
+    expect(hit.authorIsVerified).toBe(false);
+    expect(hit.importedFrom).toMatch(/sodhera/i);
+
+    const full = await getPersonPublic(hit.id);
+    expect(full?.person.description ?? "").not.toMatch(/\d{6,}/);
+    expect(full?.person.description ?? "").not.toMatch(/Contact:/i);
+  });
+
+  it("imported records are excluded from Khoj's own PFIF export", async () => {
+    const { persons } = await allPublicForExport();
+    expect(persons.some((p) => p.source.startsWith("import:"))).toBe(false);
+    expect(persons.some((p) => p.fullName === "Rajesh Syangtan")).toBe(false);
+  });
+});
+
 describe("official-sources config", () => {
   it("every entry has the required fields", () => {
     for (const s of OFFICIAL_SOURCES) {
@@ -152,8 +211,9 @@ describe("official-sources config", () => {
     }
   });
 
-  it("ships with all feeds disabled", () => {
-    expect(enabledFeeds()).toHaveLength(0);
+  it("enables only the community-registry feed by default", () => {
+    const on = enabledFeeds();
+    expect(on.map((s) => s.id)).toEqual(["sodhera-flood"]);
   });
 
   it("matches nationality to the right country bucket", () => {

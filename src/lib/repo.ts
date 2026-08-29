@@ -13,7 +13,7 @@ import {
 } from "@/db/schema";
 import { normalizeName } from "./text";
 import { scoreName, tokenize, MATCH_THRESHOLD } from "./fuzzy";
-import { screenText } from "./safety";
+import { screenText, scrubContacts } from "./safety";
 import { RECORD_TTL_DAYS } from "./env";
 import type { PersonInput, NoteInput } from "./validation";
 import { sourceById } from "@/config/official-sources";
@@ -436,16 +436,17 @@ export async function resolveReport(id: string) {
 
 export async function allPublicForExport(since?: Date) {
   const db = await getDb();
-  const where = since
-    ? and(
-        eq(persons.moderationState, "published"),
-        gte(persons.updatedAt, since),
-      )!
-    : eq(persons.moderationState, "published");
+  // Only Khoj's own records go out in the PFIF feed — never records pulled in
+  // from another registry, so data can't loop between boards.
+  const conds: SQL[] = [
+    eq(persons.moderationState, "published"),
+    sql`${persons.source} not like 'import:%'`,
+  ];
+  if (since) conds.push(gte(persons.updatedAt, since));
   const ps = await db
     .select()
     .from(persons)
-    .where(where)
+    .where(and(...conds))
     .orderBy(desc(persons.createdAt))
     .limit(5000);
 
@@ -480,6 +481,11 @@ export async function upsertImported(
   const key = `${sourceId}:${rec.externalId}`.slice(0, 300);
   const src = `import:${sourceId}`;
 
+  // Strip phone / email / passport / ID / DOB from feed free text, then hold the
+  // record for a moderator if anything contact-shaped still slipped through.
+  const description = scrubContacts(rec.description) ?? null;
+  const screen = screenText(description);
+
   const personValues = {
     recordType: rec.recordType,
     fullName: rec.fullName,
@@ -492,14 +498,17 @@ export async function upsertImported(
     homeLocation: rec.homeLocation ?? null,
     lastSeenLocation: rec.lastSeenLocation ?? null,
     lastSeenAt: rec.lastSeenAt ?? null,
-    description: rec.description ?? null,
+    description,
     photoUrl: rec.photoUrl ?? null,
     status:
       rec.status ?? (rec.recordType === "seeking" ? "missing" : "unknown"),
     authorName: rec.authorName ?? null,
-    authorIsVerified: true,
+    // A feed that flags its rows as unverified is NOT a verified source.
+    authorIsVerified: rec.unverified !== true,
     source: src,
-    moderationState: "published" as const,
+    moderationState: (screen.hold ? "pending" : "published") as
+      | "pending"
+      | "published",
     updatedAt: new Date(),
   };
 
@@ -513,7 +522,11 @@ export async function upsertImported(
   let outcome: "imported" | "updated";
   if (existing) {
     personId = existing.id;
-    await db.update(persons).set(personValues).where(eq(persons.id, personId));
+    // Refresh the data but leave moderationState alone — a moderator may have
+    // published or hidden this record since the last pull.
+    const { moderationState: _omit, ...updatable } = personValues;
+    void _omit;
+    await db.update(persons).set(updatable).where(eq(persons.id, personId));
     outcome = "updated";
   } else {
     const [row] = await db

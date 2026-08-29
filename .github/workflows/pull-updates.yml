@@ -1,8 +1,9 @@
-name: Pull event updates
+name: Pull event data
 
-# Keeps the /updates stream fresh on a schedule, independent of site traffic.
+# Keeps the /updates stream and the enabled person-record feeds fresh on a
+# schedule, independent of site traffic.
 # Needs a repo secret DATABASE_URL pointing at the production Postgres
-# (the same one the deployed site uses, with the schema already migrated).
+# (same one the deployed site uses, schema already migrated).
 
 on:
   schedule:
@@ -10,7 +11,7 @@ on:
   workflow_dispatch: {} # manual "Run workflow" button
 
 concurrency:
-  group: pull-updates
+  group: pull-data
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +24,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Pull feeds
+      - name: Pull event updates (news / humanitarian)
         run: npm run updates:pull
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Pull person-record feeds
+        run: npm run feeds:pull
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

@@ -37,6 +37,11 @@ export function PersonCard({ person }: { person: PublicPerson }) {
             {person.fullName}
           </h3>
           <StatusBadge status={person.status} />
+          {person.importedFrom && !person.authorIsVerified && (
+            <span className="badge bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-400/20">
+              unverified
+            </span>
+          )}
         </div>
         {person.alsoKnownAs && (
           <p className="truncate text-sm text-muted">also “{person.alsoKnownAs}”</p>

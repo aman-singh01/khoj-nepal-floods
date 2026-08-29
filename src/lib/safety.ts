@@ -45,3 +45,40 @@ export function isBotSubmission(form: {
   const trap = form.get("company_website");
   return typeof trap === "string" && trap.trim().length > 0;
 }
+
+/**
+ * Remove phone numbers and email addresses from free text before it is stored
+ * from an external feed. Khoj keeps contact details private by design; imported
+ * descriptions sometimes carry "Contact: 98xxxxxxxx" style strings.
+ */
+export function scrubContacts(input: string | null | undefined): string | undefined {
+  if (!input) return undefined;
+  const out = input
+    // "Contact:", "Family contacts:", "Phone -" labels and what follows
+    .replace(
+      /\b(family\s+)?(contacts?|phone|mobile|tel|whats\s?app|ph)\s*(no\.?|number|numbers)?\s*[:\-–]?\s*(and|,|\+?[()\d])[\d\s()+\-.,/]*/gi,
+      "",
+    )
+    // passport / permit / ID / citizenship / licence numbers (labelled)
+    .replace(
+      /\b(passport|permit|citizenship|national\s*id|aadha?ar|licen[cs]e|pan)\s*(no\.?|number|#|id)?\s*[:\-–]?\s*[a-z]{0,3}[\d/-]{4,}/gi,
+      "",
+    )
+    // dates of birth
+    .replace(
+      /\b(d\.?o\.?b\.?|date of birth)\s*[:\-–]?\s*\d{1,4}[/.\-]\d{1,2}[/.\-]\d{1,4}/gi,
+      "",
+    )
+    // bare phone-like runs (7+ digits, optional +, spaces, dashes)
+    .replace(/\+?\d[\d\s()\-.]{6,}\d/g, "")
+    // emails
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "")
+    // tidy up
+    .replace(/\b(and|number|numbers)\b\s*(?=[.,;]|$)/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,;])/g, "$1")
+    .replace(/([.,;])[\s.,;]*\1/g, "$1")
+    .replace(/^[\s,;]+|[\s,;]+$/g, "")
+    .trim();
+  return out.length ? out : undefined;
+}
