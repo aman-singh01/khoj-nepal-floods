@@ -1,18 +1,26 @@
 import type { Metadata } from "next";
-import { OFFICIAL_SOURCES, type OfficialSource } from "@/config/official-sources";
+import {
+  OFFICIAL_SOURCES,
+  EVENT,
+  type OfficialSource,
+} from "@/config/official-sources";
 import { COUNTRY_LABEL } from "@/components/OfficialResources";
 import { Callout } from "@/components/Callout";
 
 export const metadata: Metadata = { title: "Official help" };
 
-const ORDER: OfficialSource["country"][] = ["np", "in", "intl"];
+const ORDER: OfficialSource["country"][] = ["np", "in", "us", "intl"];
 
 function Card({ s }: { s: OfficialSource }) {
   return (
     <li className="card p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="font-medium">{s.name}</h3>
-        {!s.verified && (
+        {s.verified ? (
+          <span className="badge bg-emerald-50 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-200 dark:ring-emerald-400/20">
+            verified {s.verifiedOn}
+          </span>
+        ) : (
           <span className="badge bg-amber-50 text-amber-800 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-400/20">
             unverified
           </span>
@@ -20,26 +28,40 @@ function Card({ s }: { s: OfficialSource }) {
       </div>
       <p className="mt-1 text-sm text-muted">{s.purpose}</p>
       <p className="mt-1.5 text-xs text-muted">{s.authority}</p>
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-        {s.url && (
-          <a
-            href={s.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-accent-strong underline underline-offset-2"
-          >
-            Open ↗
-          </a>
+      <div className="mt-2 flex flex-col gap-1 text-sm">
+        {s.phone && (
+          <p className="tnum font-medium">
+            <span aria-hidden>☎ </span>
+            {s.phone}
+          </p>
         )}
-        {s.phone ? (
-          <span className="tnum">☎ {s.phone}</span>
-        ) : (
-          <span className="text-muted">
-            {s.kind === "helpline" ? "phone number not set" : ""}
-          </span>
+        {s.email && (
+          <p>
+            <a
+              href={`mailto:${s.email}`}
+              className="text-accent-strong underline underline-offset-2"
+            >
+              {s.email}
+            </a>
+          </p>
+        )}
+        {s.url && (
+          <p>
+            <a
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-accent-strong underline underline-offset-2"
+            >
+              Open ↗
+            </a>
+          </p>
         )}
       </div>
       {s.notes && <p className="mt-2 text-xs text-muted">{s.notes}</p>}
+      {s.verifiedBy && (
+        <p className="mt-1 text-[11px] text-muted">Checked against: {s.verifiedBy}</p>
+      )}
     </li>
   );
 }
@@ -52,17 +74,34 @@ export default function OfficialPage() {
       <div>
         <h1 className="font-display text-2xl font-semibold">Official help</h1>
         <p className="mt-1 text-muted">
-          Government and Red Cross services for people affected by the Nepal
-          floods. Khoj is not run by any of them.
+          Government and Red Cross services for people affected by the {EVENT.name}.
+          Khoj is not run by any of them.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-surface-2/50 p-5">
+        <h2 className="font-display text-lg font-semibold">About this emergency</h2>
+        <p className="mt-1 text-sm leading-relaxed text-muted">
+          <strong className="text-text">{EVENT.date}.</strong> {EVENT.summary}
+        </p>
+        <p className="mt-2 text-sm">
+          <a
+            href={EVENT.officialUpdates}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent-strong underline underline-offset-2"
+          >
+            Official updates (Nepal MoFA) ↗
+          </a>
         </p>
       </div>
 
       <Callout tone="warn" title="Verify before relying on this">
-        This list is a starting point maintained by the site operator. Entries
-        marked <strong>unverified</strong> have not yet been confirmed against an
-        official advisory for this emergency, and crisis helpline numbers change
-        per event. Always cross-check with the ministry or mission&rsquo;s own
-        announcement.
+        Entries are marked <strong>verified &lt;date&gt;</strong> when checked
+        against the source shown, or <strong>unverified</strong> otherwise. Crisis
+        helpline numbers still change and close — cross-check with the ministry or
+        mission&rsquo;s own announcement, and do not treat a community report as an
+        official confirmation.
       </Callout>
 
       {ORDER.map((cc) => {

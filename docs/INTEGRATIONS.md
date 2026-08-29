@@ -58,7 +58,7 @@ Imported records are marked **verified source**, attributed on-screen
 ### a. One-off / manual PFIF push
 
 ```bash
-curl -X POST 'https://YOUR_HOST/api/pfif/import?source=np-nrcs-rfl' \
+curl -X POST 'https://YOUR_HOST/api/pfif/import?source=np-nrcs' \
   -H 'x-khoj-token: <MODERATION_TOKEN>' \
   -H 'content-type: application/xml' \
   --data-binary @partner-export.xml
@@ -86,7 +86,7 @@ Response: `{ "imported": N, "updated": N, "skipped": N, "errors": [...] }`.
 ```bash
 curl -X POST 'https://YOUR_HOST/api/pfif/import' \
   -H 'x-khoj-token: <MODERATION_TOKEN>' -H 'content-type: application/json' \
-  -d '{"sourceId":"relief-camp-csv","url":"https://.../roster.csv","format":"csv","mapping":{"fullName":"name","status":"state","externalId":"id"}}'
+  -d '{"sourceId":"feed-relief-camp-csv","url":"https://.../roster.csv","format":"csv","mapping":{"fullName":"name","status":"state","externalId":"id"}}'
 ```
 
 ### Field mapping notes

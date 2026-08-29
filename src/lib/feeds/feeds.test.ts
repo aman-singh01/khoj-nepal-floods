@@ -114,7 +114,7 @@ describe("ingestPayload", () => {
   );
 
   it("imports a PFIF record and marks it verified + attributed to the source", async () => {
-    const r1 = await ingestPayload("np-nrcs-rfl", xml, "pfif");
+    const r1 = await ingestPayload("np-nrcs", xml, "pfif");
     expect(r1.imported).toBe(1);
     expect(r1.updated).toBe(0);
 
@@ -129,7 +129,7 @@ describe("ingestPayload", () => {
   });
 
   it("is idempotent - a second run updates in place", async () => {
-    const r2 = await ingestPayload("np-nrcs-rfl", xml, "pfif");
+    const r2 = await ingestPayload("np-nrcs", xml, "pfif");
     expect(r2.imported).toBe(0);
     expect(r2.updated).toBe(1);
 
@@ -146,7 +146,7 @@ describe("official-sources config", () => {
       expect(s.id, s.name).toBeTruthy();
       expect(s.name).toBeTruthy();
       expect(s.authority).toBeTruthy();
-      expect(["np", "in", "intl"]).toContain(s.country);
+      expect(["np", "in", "us", "intl"]).toContain(s.country);
       expect(["portal", "helpline", "feed"]).toContain(s.kind);
       if (s.kind === "feed") expect(s.feedFormat).toBeTruthy();
     }

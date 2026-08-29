@@ -86,7 +86,7 @@ export function toPublicPerson(p: Person): PublicPerson {
   };
 }
 
-/** "import:np-nrcs-rfl" -> "Nepal Red Cross Society — Restoring Family Links". */
+/** "import:np-nrcs" -> "Nepal Red Cross Society — Restoring Family Links". */
 export function importedFromLabel(source: string): string | null {
   if (!source.startsWith("import:")) return null;
   const id = source.slice("import:".length);

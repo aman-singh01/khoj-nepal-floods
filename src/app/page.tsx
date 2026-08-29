@@ -4,6 +4,7 @@ import { PersonCard } from "@/components/PersonCard";
 import { Callout } from "@/components/Callout";
 import { SetupNotice } from "@/components/SetupNotice";
 import { LiveRefresh } from "@/components/LiveRefresh";
+import { EVENT } from "@/config/official-sources";
 import {
   feedVersion,
   recentPersons,
@@ -60,6 +61,13 @@ export default async function HomePage() {
               I have information about someone
             </Link>
           </div>
+
+          <p className="mt-5 text-sm text-muted">
+            <strong className="text-text">{EVENT.name}</strong>, {EVENT.date}.{" "}
+            <Link href="/official" className="text-accent-strong underline underline-offset-2">
+              Official helplines &amp; portals →
+            </Link>
+          </p>
         </div>
       </section>
 
