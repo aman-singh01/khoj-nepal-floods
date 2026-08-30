@@ -7,7 +7,10 @@ records by name in any spelling. It aggregates official helplines and live news
 for the event, and syncs records with a peer registry over the **PFIF**
 standard.
 
+**Live:** <https://khoj-nepal-floods.vercel.app>
+
 <p>
+  <a href="https://khoj-nepal-floods.vercel.app"><img alt="live" src="https://img.shields.io/badge/live-khoj--nepal--floods.vercel.app-2dd4bf"></a>
   <a href="https://github.com/aman-singh01/khoj-nepal-floods/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/aman-singh01/khoj-nepal-floods/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Next.js 15" src="https://img.shields.io/badge/Next.js-15-black">
   <img alt="tests" src="https://img.shields.io/badge/tests-65%20passing-2dd4bf">
