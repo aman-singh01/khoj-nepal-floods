@@ -158,8 +158,9 @@ Postgres database (Vercel → Storage → **Neon** injects `DATABASE_URL`
 automatically) and one `npm run db:migrate` against it. Full walk-through:
 **[`docs/DEPLOY.md`](docs/DEPLOY.md)**.
 
-`vercel.json` wires two 6-hourly crons (`/api/updates/refresh`,
-`/api/feeds/refresh`); the GitHub Action is the plan-limit-free alternative.
+`vercel.json` wires two daily crons (`/api/updates/refresh`,
+`/api/feeds/refresh`) — Vercel's Hobby plan caps cron at once per day; the
+GitHub Action runs the same jobs every 6h with no plan limit.
 
 ## Integrations & operating notes
 

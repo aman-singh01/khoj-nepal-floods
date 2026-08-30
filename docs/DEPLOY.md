@@ -42,11 +42,11 @@ Deploy.
 - `GET /api/health` → `{ "ok": true }`
 - `/` renders; `/official` shows the verified helplines
 - `/moderation` → sign in with `MODERATION_TOKEN`
-- **Crons** (Project → Settings → Cron Jobs) shows two jobs every 6h:
+- **Crons** (Project → Settings → Cron Jobs) shows two daily jobs:
   `/api/updates/refresh` and `/api/feeds/refresh`. Trigger one manually and
   check `/updates` / `/persons` populate. (Vercel Hobby caps cron at once per
-  day — either change the schedules in `vercel.json` to `0 6 * * *`, or run the
-  GitHub Action in step 4 instead.)
+  day, so `vercel.json` schedules them daily; the GitHub Action in step 4 keeps
+  the 6-hourly cadence.)
 
 ## 4. Scheduled pulls without Vercel Cron (optional / Hobby plan)
 
