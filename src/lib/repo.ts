@@ -358,13 +358,15 @@ export interface Stats {
 
 export async function stats(): Promise<Stats> {
   const db = await getDb();
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  // Pass an ISO string, not a raw Date: the postgres.js driver rejects a Date
+  // interpolated straight into an sql`` template ("Received an instance of Date").
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const [row] = await db
     .select({
       seeking: sql<number>`count(*) filter (where ${persons.status} = 'missing')::int`,
       reunited: sql<number>`count(*) filter (where ${persons.status} in ('safe','seen_alive'))::int`,
       totalRecords: sql<number>`count(*)::int`,
-      updatedToday: sql<number>`count(*) filter (where ${persons.updatedAt} >= ${since})::int`,
+      updatedToday: sql<number>`count(*) filter (where ${persons.updatedAt} >= ${since}::timestamptz)::int`,
     })
     .from(persons)
     .where(eq(persons.moderationState, "published"));
